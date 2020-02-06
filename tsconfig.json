@@ -1,0 +1,14 @@
+{
+    "extends": "journey-tsconfig/journey-tsconfig.json",
+    "compilerOptions": {
+        "baseUrl": "packages",
+        "paths": {
+            "sample": [
+                "sample/src"
+            ],
+            "spacex": [
+                "spacex/src"
+            ]
+        }
+    }
+}

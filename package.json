@@ -1,0 +1,23 @@
+{
+  "name": "spacex-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "journey dev sample",
+    "build": "journey build",
+    "clean": "journey clean",
+    "export": "journey export sample"
+  },
+  "devDependencies": {
+    "@haystackjs/journey": "2.2.0",
+    "@types/react": "^16.9.19",
+    "@types/react-dom": "^16.9.5",
+    "@types/uuid": "^3.4.7",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0"
+  },
+  "dependencies": {
+    "typescript": "*",
+    "uuid": "^3.4.0"
+  }
+}
