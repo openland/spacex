@@ -1,12 +1,13 @@
 {
-  "name": "spacex",
-  "version": "1.0.0",
+  "name": "@openland/spacex",
+  "version": "0.0.1",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "peerDependencies": {
     "react": "*"
   },
   "dependencies": {
-    "uuid": "3.4.0"
+    "uuid": "3.4.0",
+    "@openland/spacex-cli": "1.0.1"
   }
 }

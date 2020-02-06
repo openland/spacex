@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "typescript": "*",
-    "uuid": "^3.4.0"
+    "uuid": "3.4.0",
+    "@openland/spacex-cli": "1.0.1"
   }
 }

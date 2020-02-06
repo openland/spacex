@@ -2,6 +2,7 @@
     "extends": "journey-tsconfig/journey-tsconfig.json",
     "compilerOptions": {
         "baseUrl": "packages",
+        "outDir": "./output",
         "paths": {
             "sample": [
                 "sample/src"
