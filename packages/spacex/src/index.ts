@@ -23,3 +23,7 @@ export {
 export {
     WorkerHost
 } from './worker/WorkerHost';
+export {
+    GraphqlUnknownError,
+    GraphqlError
+} from './GraphqlError';
