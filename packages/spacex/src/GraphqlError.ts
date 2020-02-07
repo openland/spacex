@@ -1,4 +1,3 @@
-
 export class GraphqlError extends Error {
     readonly errors: any[];
     constructor(errors: any[]) {

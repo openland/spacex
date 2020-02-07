@@ -32,5 +32,6 @@ export {
 export { RetryEngine } from './RetryEngine';
 export { WebEngine } from './web/WebEngine';
 
-import * as Definitions from './web/types';
-export const WebDefinitions = Definitions;
+import * as WebDefinitionTypes from './web/types';
+export const WebDefinitions = WebDefinitionTypes;
+export { OperationDefinition, Definitions } from './web/types';
