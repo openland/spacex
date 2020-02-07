@@ -1,5 +1,4 @@
 import { GraphqlError } from './GraphqlError';
-import { Queue } from './utils/Queue';
 import { Watcher } from './utils/Watcher';
 import { randomKey } from './utils/randomKey';
 import {

@@ -6,6 +6,7 @@
     "dev": "journey dev sample",
     "build": "journey build",
     "clean": "journey clean",
+    "release": "yarn build && cd ./packages/spacex && yarn publish",
     "export": "journey export sample"
   },
   "devDependencies": {
