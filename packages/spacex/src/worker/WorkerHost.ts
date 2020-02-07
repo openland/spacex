@@ -8,7 +8,7 @@ export class WorkerHost {
     private worker: WorkerInterface;
     private engine: GraphqlEngine;
     private watches = new Map<string, () => void>();
-    private subscriptions = new Map<string, GraphqlActiveSubscription<any, {}>>();
+    private subscriptions = new Map<string, GraphqlActiveSubscription>();
 
     constructor(opts: {
         engine: GraphqlEngine,
@@ -76,16 +76,16 @@ export class WorkerHost {
             }
         } else if (msg.type === 'subscribe') {
             let id = msg.id;
-            let subscription = this.engine.subscribe(msg.subscription, msg.variables);
-            this.subscriptions.set(id, subscription);
-            (async () => {
-                while (true) {
-                    let v = await subscription.get();
-                    this.postResult(id, v);
+            let subscription = this.engine.subscribe((src) => {
+                if (src.type === 'stopped') {
+                    this.postError(id, src.error);
+                } else if (src.type === 'message') {
+                    this.postResult(id, src.message);
+                } else {
+                    console.warn('Unknown subscription result: ', src);
                 }
-            })();
-        } else if (msg.type === 'subscribe-update') {
-            this.subscriptions.get(msg.id)!!.updateVariables(msg.variables);
+            }, msg.subscription, msg.variables);
+            this.subscriptions.set(id, subscription);
         } else if (msg.type === 'subscribe-destroy') {
             this.subscriptions.get(msg.id)!!.destroy();
             this.subscriptions.delete(msg.id);

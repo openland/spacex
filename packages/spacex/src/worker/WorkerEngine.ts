@@ -7,9 +7,10 @@ export class WorkerEngine extends GraphqlBridgedEngine {
     private readonly worker: WorkerInterface;
 
     constructor(opts: {
-        worker: WorkerInterface
+        worker: WorkerInterface,
+        getApplicationError?: (src: Error) => Error | null
     }) {
-        super();
+        super({ getApplicationError: opts.getApplicationError });
         this.worker = opts.worker;
         this.worker.setHandler((msg: any) => {
             this.handleMessage(msg);

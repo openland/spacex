@@ -7,7 +7,8 @@ import {
     GraphqlEngineStatus,
     OperationParameters,
     GraphqlQueryWatch,
-    GraphqlActiveSubscription
+    GraphqlActiveSubscription,
+    GraphqlSubscriptionHandler
 } from './GraphqlEngine';
 import { delay } from './utils/delay';
 
@@ -195,34 +196,38 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
     // Subscription
     //
 
-    subscribe<TSubscription, TVars>(subscription: string, vars?: TVars): GraphqlActiveSubscription<TSubscription, TVars> {
+    subscribe<TSubscription, TVars>(handler: GraphqlSubscriptionHandler<TSubscription>, subscription: string, vars?: TVars): GraphqlActiveSubscription {
+        let destroyed = false;
+
+        // Set Handler
         let id = this.nextKey();
-        let queue = new Queue();
-        var variables = vars;
-        var currentId = id;
-        this.handlersMap.set(currentId, id);
+        this.handlersMap.set(id, id);
         this.handlers.set(id, (data, error) => {
+            if (destroyed) {
+                return;
+            }
             if (error) {
-                console.warn('Received subscription error: restarting');
-                this.handlersMap.delete(currentId);
-                currentId = this.nextKey();
-                this.handlersMap.set(currentId, id);
-                this.postSubscribe(currentId, subscription, variables);
+                let appErr = this.getApplicationError(error) || error;
+                this.handlersMap.delete(id);
+                this.handlers.delete(id);
+                handler({ type: 'stopped', error: appErr });
+                this.postUnsubscribe(id);
+                destroyed = true;
             } else {
-                queue.post(data);
+                handler({ type: 'message', message: data });
             }
         });
+
+        // Subscribe
         this.postSubscribe(id, subscription, vars);
+
         return {
-            get: () => {
-                return queue.get();
-            },
-            updateVariables: (vars2: TVars) => {
-                variables = vars2;
-                this.postSubscribeUpdate(id, vars2);
-            },
             destroy: () => {
-                this.handlersMap.delete(currentId);
+                if (destroyed) {
+                    return;
+                }
+                destroyed = true;
+                this.handlersMap.delete(id);
                 this.handlers.delete(id);
                 this.postUnsubscribe(id);
             }

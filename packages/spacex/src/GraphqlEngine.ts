@@ -2,9 +2,9 @@
 // Subscription
 //
 
-export interface GraphqlActiveSubscription<TSubs, TVars> {
-    get(): Promise<TSubs>;
-    updateVariables(src?: TVars): void;
+export type GraphqlSubscriptionHandler<T> = (event: { type: 'stopped', error: Error } | { type: 'message', message: T }) => void;
+
+export interface GraphqlActiveSubscription {
     destroy(): void;
 }
 
@@ -45,7 +45,7 @@ export interface GraphqlEngineStatus {
  * GraphQLEngine is a low level implementation of GraphQL client
  */
 export interface GraphqlEngine {
-    
+
     /**
      * GraphQLEngine status
      */
@@ -59,7 +59,7 @@ export interface GraphqlEngine {
     query<TQuery, TVars>(query: string, vars?: TVars, params?: OperationParameters): Promise<TQuery>;
     queryWatch<TQuery, TVars>(query: string, vars?: TVars, params?: OperationParameters): GraphqlQueryWatch<TQuery>;
     mutate<TMutation, TVars>(mutation: string, vars?: TVars): Promise<TMutation>;
-    subscribe<TSubscription, TVars>(subscription: string, vars?: TVars): GraphqlActiveSubscription<TSubscription, TVars>;
+    subscribe<TSubscription, TVars>(handler: GraphqlSubscriptionHandler<TSubscription>, subscription: string, vars?: TVars): GraphqlActiveSubscription;
 
     updateQuery<TQuery, TVars>(updater: (data: TQuery) => TQuery | null, query: string, vars?: TVars): Promise<boolean>;
     readQuery<TQuery, TVars>(query: string, vars?: TVars): Promise<TQuery | null>;
