@@ -4,7 +4,7 @@
 
 export type GraphqlSubscriptionHandler<T> = (event: { type: 'stopped', error: Error } | { type: 'message', message: T }) => void;
 
-export interface GraphqlActiveSubscription {
+export interface GraphqlActiveSubscription<T> {
     destroy(): void;
 }
 
@@ -59,7 +59,7 @@ export interface GraphqlEngine {
     query<TQuery, TVars>(query: string, vars?: TVars, params?: OperationParameters): Promise<TQuery>;
     queryWatch<TQuery, TVars>(query: string, vars?: TVars, params?: OperationParameters): GraphqlQueryWatch<TQuery>;
     mutate<TMutation, TVars>(mutation: string, vars?: TVars): Promise<TMutation>;
-    subscribe<TSubscription, TVars>(handler: GraphqlSubscriptionHandler<TSubscription>, subscription: string, vars?: TVars): GraphqlActiveSubscription;
+    subscribe<TSubscription, TVars>(handler: GraphqlSubscriptionHandler<TSubscription>, subscription: string, vars?: TVars): GraphqlActiveSubscription<TSubscription>;
 
     updateQuery<TQuery, TVars>(updater: (data: TQuery) => TQuery | null, query: string, vars?: TVars): Promise<boolean>;
     readQuery<TQuery, TVars>(query: string, vars?: TVars): Promise<TQuery | null>;

@@ -142,7 +142,7 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
     // Subscription
     //
 
-    subscribe<TSubscription, TVars>(handler: GraphqlSubscriptionHandler<TSubscription>, subscription: string, vars?: TVars): GraphqlActiveSubscription {
+    subscribe<TSubscription, TVars>(handler: GraphqlSubscriptionHandler<TSubscription>, subscription: string, vars?: TVars): GraphqlActiveSubscription<TSubscription> {
         let destroyed = false;
 
         // Set Handler

@@ -8,7 +8,7 @@ export class WorkerHost {
     private worker: WorkerInterface;
     private engine: GraphqlEngine;
     private watches = new Map<string, () => void>();
-    private subscriptions = new Map<string, GraphqlActiveSubscription>();
+    private subscriptions = new Map<string, GraphqlActiveSubscription<{}>>();
 
     constructor(opts: {
         engine: GraphqlEngine,
