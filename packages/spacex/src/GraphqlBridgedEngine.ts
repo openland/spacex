@@ -1,4 +1,3 @@
-import { GraphqlError } from './GraphqlError';
 import { Watcher } from './utils/Watcher';
 import { randomKey } from './utils/randomKey';
 import {
@@ -9,7 +8,6 @@ import {
     GraphqlActiveSubscription,
     GraphqlSubscriptionHandler
 } from './GraphqlEngine';
-import { delay } from './utils/delay';
 
 class BridgedQueryWatch {
     hasValue: boolean = false;
@@ -20,10 +18,8 @@ class BridgedQueryWatch {
 
 export abstract class GraphqlBridgedEngine implements GraphqlEngine {
 
-    private handlersMap = new Map<string, string>();
     private handlers = new Map<string, (data?: any, error?: Error) => void>();
     private queryWatches = new Map<string, BridgedQueryWatch>();
-    private getApplicationError: (src: Error) => Error | null;
 
     // Status
     protected readonly statusWatcher: Watcher<GraphqlEngineStatus> = new Watcher();
@@ -34,13 +30,8 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
         return this.statusWatcher.watch(handler);
     }
 
-    constructor(opts?: { getApplicationError?: (src: Error) => Error | null }) {
+    constructor() {
         this.statusWatcher.setState({ status: 'connecting' });
-        if (opts && opts.getApplicationError) {
-            this.getApplicationError = opts.getApplicationError;
-        } else {
-            this.getApplicationError = (src) => src instanceof GraphqlError ? src : null;
-        }
     }
 
     abstract close(): void;
@@ -50,30 +41,14 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
     //
 
     async query<TQuery, TVars>(query: string, vars?: TVars, params?: OperationParameters): Promise<TQuery> {
-
-        // Retry logic
-        while (true) {
-            try {
-                let id = this.nextKey();
-                let res = this.registerPromiseHandler<TQuery>(id);
-                this.postQuery(id, query, vars, params);
-                return await res;
-            } catch (e) {
-                let appError = this.getApplicationError(e);
-                if (appError) {
-                    throw appError;
-                } else {
-                    console.warn('Unknown error during query');
-                    console.warn(e);
-                }
-                await delay(1000);
-            }
-        }
+        let id = this.nextKey();
+        let res = this.registerPromiseHandler<TQuery>(id);
+        this.postQuery(id, query, vars, params);
+        return await res;
     }
 
     queryWatch<TQuery, TVars>(query: string, vars?: TVars, params?: OperationParameters): GraphqlQueryWatch<TQuery> {
         let id = this.nextKey();
-        let currentId = id;
         let watch = new BridgedQueryWatch();
         let callbacks = new Map<string, (args: { data?: TQuery, error?: Error }) => void>();
         let resolved = false;
@@ -85,43 +60,25 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
         });
         let completed = false;
         this.queryWatches.set(id, watch);
-        this.handlersMap.set(currentId, id);
         this.handlers.set(id, (data, error) => {
-
-            // Special retry action
+            if (completed) {
+                return;
+            }
+            
+            // Update State
             if (error) {
-                let appError = this.getApplicationError(error);
-                if (!appError) {
-                    console.warn('Received unknown error: retrying watch');
-
-                    // Stop old watch
-                    this.handlersMap.delete(currentId);
-                    this.postQueryWatchEnd(currentId);
-
-                    // Launch new watch
-                    currentId = this.nextKey();
-                    this.handlersMap.set(currentId, id);
-
-                    // Schedule new watch
-                    setTimeout(() => {
-                        if (!completed) {
-                            this.postQueryWatch(currentId, query, vars, params);
-                        }
-                    }, 1000);
-
-                    return;
-                } else {
-                    watch.hasError = true;
-                    watch.hasValue = false;
-                    watch.value = undefined;
-                    watch.error = appError;
-                }
+                watch.hasError = true;
+                watch.hasValue = false;
+                watch.value = undefined;
+                watch.error = error;
             } else {
                 watch.hasError = false;
                 watch.hasValue = true;
                 watch.value = data;
                 watch.error = undefined;
             }
+
+            // Resolve start promise if needed
             if (!resolved) {
                 resolved = true;
                 if (watch.hasError) {
@@ -130,6 +87,8 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
                     resolve();
                 }
             }
+
+            // Trigger callbacks
             for (let i of callbacks.values()) {
                 if (watch.hasError) {
                     i({ error: watch.error });
@@ -160,8 +119,9 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
             },
             destroy: () => {
                 if (!completed) {
-                    this.handlersMap.delete(currentId);
-                    this.postQueryWatchEnd(currentId);
+                    completed = true;
+                    this.handlers.delete(id);
+                    this.postQueryWatchEnd(id);
                 }
             }
         };
@@ -172,23 +132,10 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
     //
 
     async mutate<TQuery, TVars>(query: string, vars?: TVars): Promise<TQuery> {
-        while (true) {
-            try {
-                let id = this.nextKey();
-                let res = this.registerPromiseHandler<TQuery>(id);
-                this.postMutation(id, query, vars);
-                return await res;
-            } catch (e) {
-                let appError = this.getApplicationError(e);
-                if (appError) {
-                    throw appError;
-                } else {
-                    console.warn('Unknown error during mutation');
-                    console.warn(e);
-                }
-                await delay(1000);
-            }
-        }
+        let id = this.nextKey();
+        let res = this.registerPromiseHandler<TQuery>(id);
+        this.postMutation(id, query, vars);
+        return await res;
     }
 
     //
@@ -200,16 +147,13 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
 
         // Set Handler
         let id = this.nextKey();
-        this.handlersMap.set(id, id);
         this.handlers.set(id, (data, error) => {
             if (destroyed) {
                 return;
             }
             if (error) {
-                let appErr = this.getApplicationError(error) || error;
-                this.handlersMap.delete(id);
                 this.handlers.delete(id);
-                handler({ type: 'stopped', error: appErr });
+                handler({ type: 'stopped', error: error });
                 this.postUnsubscribe(id);
                 destroyed = true;
             } else {
@@ -226,7 +170,6 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
                     return;
                 }
                 destroyed = true;
-                this.handlersMap.delete(id);
                 this.handlers.delete(id);
                 this.postUnsubscribe(id);
             }
@@ -268,21 +211,13 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
     //
 
     protected operationUpdated(id: string, data: any) {
-        let realId = this.handlersMap.get(id);
-        if (!realId) {
-            return;
-        }
-        let handler = this.handlers.get(realId);
+        let handler = this.handlers.get(id);
         if (handler) {
             handler(data, undefined);
         }
     }
     protected operationFailed(id: string, err: Error) {
-        let realId = this.handlersMap.get(id);
-        if (!realId) {
-            return;
-        }
-        let handler = this.handlers.get(realId);
+        let handler = this.handlers.get(id);
         if (handler) {
             handler(undefined, err);
         }
@@ -295,7 +230,6 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
     protected abstract postMutation<TVars>(id: string, query: string, vars?: TVars): void;
 
     protected abstract postSubscribe<TVars>(id: string, query: string, vars?: TVars): void;
-    protected abstract postSubscribeUpdate(id: string, vars: any): void;
     protected abstract postUnsubscribe(id: string): void;
 
     protected abstract postReadQuery<TVars>(id: string, query: string, vars?: TVars): void;
@@ -307,7 +241,6 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
 
     private registerPromiseHandler<T>(id: string): Promise<T> {
         return new Promise<T>((resolve, reject) => {
-            this.handlersMap.set(id, id);
             this.handlers.set(id, (data, error) => {
                 this.handlers.delete(id);
                 if (error) {

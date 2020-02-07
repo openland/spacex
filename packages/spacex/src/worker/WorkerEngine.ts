@@ -7,10 +7,9 @@ export class WorkerEngine extends GraphqlBridgedEngine {
     private readonly worker: WorkerInterface;
 
     constructor(opts: {
-        worker: WorkerInterface,
-        getApplicationError?: (src: Error) => Error | null
+        worker: WorkerInterface
     }) {
-        super({ getApplicationError: opts.getApplicationError });
+        super();
         this.worker = opts.worker;
         this.worker.setHandler((msg: any) => {
             this.handleMessage(msg);
@@ -37,9 +36,6 @@ export class WorkerEngine extends GraphqlBridgedEngine {
 
     protected postSubscribe(id: string, subscription: string, vars: any) {
         this.postMessage({ type: 'subscribe', id, subscription: subscription, variables: vars });
-    }
-    protected postSubscribeUpdate(id: string, vars: any) {
-        this.postMessage({ type: 'subscribe-update', id, variables: vars });
     }
     protected postUnsubscribe(id: string) {
         this.postMessage({ type: 'subscribe-destroy', id });
