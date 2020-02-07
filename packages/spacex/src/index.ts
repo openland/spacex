@@ -6,6 +6,7 @@ export {
     GraphqlQueryWatch,
     OperationParameters,
     QueryWatchParameters,
+    GraphqlSubscriptionHandler
 } from './GraphqlEngine';
 export {
     GraphqlBridgedEngine
