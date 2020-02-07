@@ -28,3 +28,9 @@ export {
     GraphqlUnknownError,
     GraphqlError
 } from './GraphqlError';
+
+export { RetryEngine } from './RetryEngine';
+export { WebEngine } from './web/WebEngine';
+
+import * as Definitions from './web/types';
+export const WebDefinitions = Definitions;
