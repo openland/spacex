@@ -11,7 +11,7 @@ export class WebTransport {
     private readonly serviceLayer: TransportServiceLayer;
     onStatusChanged: ((status: GraphqlEngineStatus) => void) | null = null;
 
-    constructor(endpoint: string, params?: any, protocol?: string) {
+    constructor(endpoint: string, params?: any, protocol?: 'apollo' | 'openland') {
         this.endpoint = endpoint;
         this.params = params;
         this.serviceLayer = new TransportServiceLayer(endpoint, params, protocol);

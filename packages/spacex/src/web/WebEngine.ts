@@ -23,7 +23,7 @@ export class WebEngine implements GraphqlEngine {
     private readonly transport: WebTransport;
     private readonly definitions: Definitions;
 
-    constructor(definitions: Definitions, opts: { endpoint: string, connectionParams?: any, protocol?: string }) {
+    constructor(definitions: Definitions, opts: { endpoint: string, connectionParams?: any, protocol?: 'apollo' | 'openland' }) {
         this.transport = new WebTransport(opts.endpoint, opts.connectionParams, opts.protocol);
         this.statusWatcher.setState({ status: 'connecting' });
         this.definitions = definitions;
