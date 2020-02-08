@@ -35,3 +35,5 @@ export { WebEngine } from './web/WebEngine';
 import * as WebDefinitionTypes from './web/types';
 export const WebDefinitions = WebDefinitionTypes;
 export { OperationDefinition, Definitions } from './web/types';
+export { QueryCacheProvider } from './QueryCache';
+export { SpaceQueryWatchParameters, BaseSpaceXClient } from './BaseSpaceXClient';
