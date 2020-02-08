@@ -20,10 +20,10 @@ export class ThrustedSocket {
     private watchDog: WatchDogTimer | null = null;
     private closed = false;
 
-    constructor(url: string, timeout: number) {
+    constructor(url: string, timeout: number, protocol?: string) {
         this.url = url;
         this.timeout = timeout;
-        this.thruster = new Thruster(CONNECTION_BUCKETS.map((v) => ({ url, timeout: v })), this.onConnected);
+        this.thruster = new Thruster(CONNECTION_BUCKETS.map((v) => ({ url, timeout: v })), this.onConnected, protocol);
     }
 
     private onConnected = (socket: WebSocket) => {

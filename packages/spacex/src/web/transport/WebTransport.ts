@@ -11,10 +11,10 @@ export class WebTransport {
     private readonly serviceLayer: TransportServiceLayer;
     onStatusChanged: ((status: GraphqlEngineStatus) => void) | null = null;
 
-    constructor(endpoint: string, params?: any) {
+    constructor(endpoint: string, params?: any, protocol?: string) {
         this.endpoint = endpoint;
         this.params = params;
-        this.serviceLayer = new TransportServiceLayer(endpoint, params);
+        this.serviceLayer = new TransportServiceLayer(endpoint, params, protocol);
         this.serviceLayer.onStatusChanged = (status) => {
             if (this.onStatusChanged) {
                 this.onStatusChanged(status);

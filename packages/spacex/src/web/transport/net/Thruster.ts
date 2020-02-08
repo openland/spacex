@@ -11,14 +11,16 @@ export type ThrusterConfig = { url: string, timeout: number };
 export class Thruster {
     readonly configs: ThrusterConfig[];
     readonly onSuccess: (socket: WebSocket) => void;
+    readonly protocol?: string;
 
     private bucketSockets: (WebSocket | null)[] = [];
     private bucketTimeout: any[] = [];
     private closed = false;
 
-    constructor(configs: ThrusterConfig[], onSuccess: (socket: WebSocket) => void) {
+    constructor(configs: ThrusterConfig[], onSuccess: (socket: WebSocket) => void, protocol?: string) {
         this.configs = configs;
         this.onSuccess = onSuccess;
+        this.protocol = protocol;
 
         for (let i = 0; i < configs.length; i++) {
             this.bucketSockets.push(null);
@@ -54,7 +56,7 @@ export class Thruster {
             this.bucketTimeout[bucket] = null;
         }
 
-        const ws = new WebSocket(url);
+        const ws = new WebSocket(url, this.protocol);
         this.bucketSockets[bucket] = ws;
         ws.onopen = () => {
 

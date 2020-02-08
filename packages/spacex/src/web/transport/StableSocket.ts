@@ -24,6 +24,7 @@ const PING_INTERVAL = 1000;
 export class StableApolloSocket implements StableSocket<any> {
     private readonly endpoint: string;
     private readonly params: any;
+    private readonly protocol?: string;
 
     onReceiveData: ((id: string, message: any) => void) | null = null;
     onReceiveError: ((id: string, error: any[]) => void) | null = null;
@@ -40,9 +41,10 @@ export class StableApolloSocket implements StableSocket<any> {
     private isStopped = false;
     private client: ThrustedSocket | null = null;
 
-    constructor(endpoint: string, params: any) {
+    constructor(endpoint: string, params: any, protocol?: string) {
         this.endpoint = endpoint;
         this.params = params;
+        this.protocol = protocol;
     }
 
     post(id: string, message: any) {
@@ -193,7 +195,7 @@ export class StableApolloSocket implements StableSocket<any> {
         this.state = 'connecting';
         console.log('[WS] Connecting');
 
-        let ws = new ThrustedSocket(this.endpoint, SOCKET_TIMEOUT);
+        let ws = new ThrustedSocket(this.endpoint, SOCKET_TIMEOUT, this.protocol);
         ws.onopen = () => {
             if (this.client !== ws) {
                 return;

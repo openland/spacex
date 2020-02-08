@@ -12,8 +12,8 @@ export class TransportServiceLayer {
     private readonly socket: StableSocket<any>;
     onStatusChanged: ((status: GraphqlEngineStatus) => void) | null = null;
 
-    constructor(endpoint: string, params?: any) {
-        this.socket = new StableApolloSocket(endpoint, params || {});
+    constructor(endpoint: string, params?: any, protocol?: string) {
+        this.socket = new StableApolloSocket(endpoint, params || {}, protocol);
         this.socket.onConnected = () => {
             console.log('[TX] Connected');
             if (this.onStatusChanged) {
