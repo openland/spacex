@@ -1,6 +1,8 @@
 {
     "extends": "journey-tsconfig/journey-tsconfig.json",
     "compilerOptions": {
+        "target": "es5",
+        "downlevelIteration": true,
         "baseUrl": "packages",
         "outDir": "./output",
         "paths": {
