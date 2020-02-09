@@ -1,3 +1,4 @@
+import { WebEngineOpts } from './../WebEngine';
 import { GraphqlEngineStatus } from '../../GraphqlEngine';
 import { TransportServiceLayer } from './TransportServiceLayer';
 import { OperationDefinition } from '../types';
@@ -6,15 +7,13 @@ export type TransportResult = { type: 'result', value: any } | { type: 'error', 
 
 export class WebTransport {
 
-    readonly params?: string;
-    readonly endpoint: string;
+    private readonly opts: WebEngineOpts
     private readonly serviceLayer: TransportServiceLayer;
     onStatusChanged: ((status: GraphqlEngineStatus) => void) | null = null;
 
-    constructor(endpoint: string, params?: any, protocol?: 'apollo' | 'openland') {
-        this.endpoint = endpoint;
-        this.params = params;
-        this.serviceLayer = new TransportServiceLayer(endpoint, params, protocol);
+    constructor(opts: WebEngineOpts) {
+        this.opts = opts;
+        this.serviceLayer = new TransportServiceLayer(opts);
         this.serviceLayer.onStatusChanged = (status) => {
             if (this.onStatusChanged) {
                 this.onStatusChanged(status);

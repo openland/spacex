@@ -1,3 +1,4 @@
+import { WebEngineOpts } from './../WebEngine';
 import { GraphqlEngineStatus } from './../../GraphqlEngine';
 import { StableSocket, StableApolloSocket } from './StableSocket';
 import { OperationDefinition } from './../types';
@@ -12,16 +13,20 @@ export class TransportServiceLayer {
     private readonly socket: StableSocket<any>;
     onStatusChanged: ((status: GraphqlEngineStatus) => void) | null = null;
 
-    constructor(endpoint: string, params?: any, protocol?: 'apollo' | 'openland') {
-        this.socket = new StableApolloSocket(endpoint, params || {}, protocol);
+    constructor(opts: WebEngineOpts) {
+        this.socket = new StableApolloSocket(opts);
         this.socket.onConnected = () => {
-            console.log('[TX] Connected');
+            if (opts.logging) {
+                console.log('[TX] Connected');
+            }
             if (this.onStatusChanged) {
                 this.onStatusChanged({ status: 'connected' });
             }
         };
         this.socket.onDisconnected = () => {
-            console.log('[TX] Disconnected');
+            if (opts.logging) {
+                console.log('[TX] Disconnected');
+            }
             if (this.onStatusChanged) {
                 this.onStatusChanged({ status: 'connecting' });
             }
@@ -89,7 +94,9 @@ export class TransportServiceLayer {
         // };
 
         this.socket.onSessionLost = () => {
-            console.log('[TX] Session lost');
+            if (opts.logging) {
+                console.log('[TX] Session lost');
+            }
             for (let op of Array.from(this.liveOperations.values()) /* I am not sure if i can iterate and delete from map */) {
 
                 if (op.operation.kind === 'subscription') {

@@ -1,3 +1,4 @@
+import { WebEngineOpts } from './../WebEngine';
 import { GraphqlUnknownError } from './../../GraphqlError';
 import { ThrustedSocket } from './net/ThrustedSocket';
 
@@ -22,9 +23,7 @@ const SOCKET_TIMEOUT = 5000;
 const PING_INTERVAL = 1000;
 
 export class StableApolloSocket implements StableSocket<any> {
-    private readonly endpoint: string;
-    private readonly params: any;
-    private readonly protocol: 'apollo' | 'openland';
+    private readonly opts: WebEngineOpts;
 
     onReceiveData: ((id: string, message: any) => void) | null = null;
     onReceiveError: ((id: string, error: any[]) => void) | null = null;
@@ -41,10 +40,8 @@ export class StableApolloSocket implements StableSocket<any> {
     private isStopped = false;
     private client: ThrustedSocket | null = null;
 
-    constructor(endpoint: string, params: any, protocol?: 'apollo' | 'openland') {
-        this.endpoint = endpoint;
-        this.params = params;
-        this.protocol = protocol || 'apollo';
+    constructor(opts: WebEngineOpts) {
+        this.opts = opts;
     }
 
     post(id: string, message: any) {
@@ -131,14 +128,16 @@ export class StableApolloSocket implements StableSocket<any> {
                 // Remove all pending messages
                 this.pending.clear();
 
-                console.log('[WS] Started');
+                if (this.opts.logging) {
+                    console.log('[WS] Started');
+                }
 
                 // Send Ping
                 if (this.pingTimeout) {
                     clearTimeout(this.pingTimeout);
                 }
                 this.pingTimeout = setTimeout(() => {
-                    if (this.protocol === 'openland') {
+                    if (this.opts.protocol === 'openland') {
                         this.writeToSocket({
                             type: 'ping'
                         });
@@ -151,7 +150,7 @@ export class StableApolloSocket implements StableSocket<any> {
                 }
             }
         } else if (src.type === 'ping') {
-            if (this.protocol === 'openland') {
+            if (this.opts.protocol === 'openland') {
                 this.writeToSocket({
                     type: 'pong'
                 });
@@ -163,7 +162,7 @@ export class StableApolloSocket implements StableSocket<any> {
             }
             this.pingTimeout = setTimeout(() => {
                 if (this.state === 'started') {
-                    if (this.protocol === 'openland') {
+                    if (this.opts.protocol === 'openland') {
                         this.writeToSocket({
                             type: 'ping'
                         });
@@ -186,10 +185,13 @@ export class StableApolloSocket implements StableSocket<any> {
             }
         } else if (src.type === 'error') {
             // Critical error
-            // let id = src.id as string;
-            // if (this.onReceiveTryAgain) {
-            //     this.onReceiveTryAgain(id, 5000);
-            // }
+            console.warn(src);
+        } else if (src.type === 'connection_error') {
+            if (src.payload && typeof src.payload.message === 'string') {
+                if (this.opts.onConnectionFailed) {
+                    this.opts.onConnectionFailed(src.payload.message);
+                }
+            }
         }
     }
 
@@ -199,9 +201,11 @@ export class StableApolloSocket implements StableSocket<any> {
         }
 
         this.state = 'connecting';
-        console.log('[WS] Connecting');
-
-        let ws = new ThrustedSocket(this.endpoint, SOCKET_TIMEOUT, this.protocol === 'apollo' ? 'graphql-ws' : undefined);
+        if (this.opts.logging) {
+            console.log('[WS] Connecting');
+        }
+        let protocol = this.opts.protocol || 'apollo';
+        let ws = new ThrustedSocket(this.opts.endpoint, SOCKET_TIMEOUT, protocol === 'apollo' ? 'graphql-ws' : undefined);
         ws.onopen = () => {
             if (this.client !== ws) {
                 return;
@@ -210,18 +214,20 @@ export class StableApolloSocket implements StableSocket<any> {
                 throw Error('Unexpected state');
             }
             this.state = 'starting';
-            console.log('[WS] Starting');
+            if (this.opts.logging) {
+                console.log('[WS] Starting');
+            }
 
-            if (this.protocol === 'apollo') {
+            if (protocol === 'apollo') {
                 this.writeToSocket({
                     type: 'connection_init',
-                    'payload': this.params
+                    'payload': this.opts.connectionParams || {}
                 });
             } else {
                 this.writeToSocket({
                     protocol_v: 2,
                     type: 'connection_init',
-                    'payload': this.params
+                    'payload': this.opts.connectionParams || {}
                 });
             }
 
@@ -242,10 +248,14 @@ export class StableApolloSocket implements StableSocket<any> {
             // TODO: Backoff
             this.stopClient();
             this.state = 'waiting';
-            console.log('[WS] Waiting');
+            if (this.opts.logging) {
+                console.log('[WS] Waiting');
+            }
 
             if (sessionLost) {
-                console.log('[WS] Session Lost');
+                if (this.opts.logging) {
+                    console.log('[WS] Session Lost');
+                }
 
                 if (this.onDisconnected) {
                     this.onDisconnected();
