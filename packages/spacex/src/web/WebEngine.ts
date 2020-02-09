@@ -5,6 +5,7 @@ import { Definitions } from './types';
 import { WebTransport } from './transport/WebTransport';
 import { WebStore } from './store/WebStore';
 import { randomKey } from '../utils/randomKey';
+import { Queue } from '../utils/Queue';
 
 class QueryWatchState {
     hasValue: boolean = false;
@@ -268,6 +269,7 @@ export class WebEngine implements GraphqlEngine {
             throw new GraphqlUnknownError('Invalid operation kind');
         }
         let completed = false;
+        let queue = new Queue();
         let runningOperation = this.transport.subscription(operation, vars, (s) => {
             if (completed) {
                 return;
@@ -281,7 +283,22 @@ export class WebEngine implements GraphqlEngine {
                 runningOperation();
                 handler({ type: 'stopped', error: new GraphqlError(s.errors) });
             } else if (s.type === 'result') {
-                handler({ type: 'message', message: s.value });
+                (async () => {
+                    try {
+                        await this.store.mergeResponse(operation, vars, s.value);
+                    } catch (e) {
+                        console.warn(e);
+                        if (!completed) {
+                            completed = true;
+                            runningOperation();
+                            handler({ type: 'stopped', error: new GraphqlUnknownError('Mailformed message') });
+                        }
+                        return;
+                    }
+                    if (!completed) {
+                        handler({ type: 'message', message: s.value });
+                    }
+                })();
             } else {
                 throw new GraphqlUnknownError('Internal Error');
             }
