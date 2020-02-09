@@ -19,7 +19,7 @@ export interface WebEngineOpts {
     connectionParams?: any;
     protocol?: 'apollo' | 'openland';
     onConnectionFailed?: (message: string) => void;
-    logging: boolean;
+    logging?: boolean;
 }
 
 export class WebEngine implements GraphqlEngine {
