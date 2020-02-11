@@ -185,7 +185,7 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
         if (r) {
             let udpated = updater(r);
             if (udpated) {
-                await this.writeQuery<TQuery, TVars>(r, query, vars);
+                await this.writeQuery<TQuery, TVars>(udpated, query, vars);
                 return true;
             }
         }

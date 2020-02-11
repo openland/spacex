@@ -327,9 +327,9 @@ export class WebEngine implements GraphqlEngine {
     async updateQuery<TQuery, TVars>(updater: (data: TQuery) => TQuery | null, query: string, vars?: TVars): Promise<boolean> {
         let r = await this.readQuery<TQuery, TVars>(query, vars);
         if (r) {
-            let udpated = updater(r);
-            if (udpated) {
-                await this.writeQuery<TQuery, TVars>(r, query, vars);
+            let updated = updater(r);
+            if (updated) {
+                await this.writeQuery<TQuery, TVars>(updated, query, vars);
                 return true;
             }
         }
