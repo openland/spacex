@@ -10,7 +10,7 @@
     "export": "journey export sample"
   },
   "devDependencies": {
-    "@haystackjs/journey": "2.2.0",
+    "@haystackjs/journey": "2.2.1",
     "@types/react": "^16.9.19",
     "@types/react-dom": "^16.9.5",
     "@types/uuid": "^3.4.7",
