@@ -117,7 +117,9 @@ export class StableApolloSocket implements StableSocket<any> {
     }
 
     private onMessage(src: any) {
-        console.log('[WS] <<< ' + JSON.stringify(src));
+        if (this.opts.logging) {
+            console.log('[WS] <<< ' + JSON.stringify(src));
+        }
         if (src.type === 'ka') {
             // Ignore
         } else if (src.type === 'connection_ack') {
@@ -265,11 +267,7 @@ export class StableApolloSocket implements StableSocket<any> {
                 }
             }
 
-            setTimeout(() => {
-                if (this.state === 'waiting') {
-                    this.doConnect();
-                }
-            }, 1000);
+            this.doConnect();
         };
         ws.onmessage = (m) => {
             if (this.client !== ws) {
