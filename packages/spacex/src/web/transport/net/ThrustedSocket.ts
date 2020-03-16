@@ -1,6 +1,6 @@
+import { WebSocketConnection, WebSocketEngine } from './../WebSocketEngine';
 import { WatchDogTimer } from './WatchDogTimer';
 import { Thruster } from './Thruster';
-import WebSocket from 'isomorphic-ws';
 
 const empty = () => { /* */ };
 
@@ -16,17 +16,27 @@ export class ThrustedSocket {
     onmessage: ((msg: string) => void) | null = null;
 
     private thruster: Thruster;
-    private socket: WebSocket | null = null;
+    private socket: WebSocketConnection | null = null;
     private watchDog: WatchDogTimer | null = null;
     private closed = false;
 
-    constructor(url: string, timeout: number, protocol?: string) {
-        this.url = url;
-        this.timeout = timeout;
-        this.thruster = new Thruster(CONNECTION_BUCKETS.map((v) => ({ url, timeout: v })), this.onConnected, protocol);
+    constructor(opts: {
+        url: string,
+        timeout: number,
+        protocol?: string,
+        engine?: WebSocketEngine
+    }) {
+        this.url = opts.url;
+        this.timeout = opts.timeout;
+        this.thruster = new Thruster({
+            configs: CONNECTION_BUCKETS.map((v) => ({ url: opts.url, timeout: v })),
+            onSuccess: this.onConnected,
+            engine: opts.engine,
+            protocol: opts.protocol
+        });
     }
 
-    private onConnected = (socket: WebSocket) => {
+    private onConnected = (socket: WebSocketConnection) => {
         this.watchDog = new WatchDogTimer(this.timeout, this.onConnectionDied);
         this.socket = socket;
         this.watchDog.reset();
@@ -37,7 +47,7 @@ export class ThrustedSocket {
         socket.onmessage = (src) => {
             if (!this.closed) {
                 if (this.onmessage) {
-                    this.onmessage(src.data as string);
+                    this.onmessage(src);
                 }
             }
             if (this.watchDog) {

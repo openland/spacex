@@ -1,28 +1,12 @@
-import { WebEngineOpts } from './../WebEngine';
-import { GraphqlUnknownError } from './../../GraphqlError';
+import { WebEngineOpts } from '../WebEngine';
+import { GraphqlUnknownError } from '../../GraphqlError';
 import { ThrustedSocket } from './net/ThrustedSocket';
-
-export interface StableSocket<T> {
-    onConnected: (() => void) | null;
-    onDisconnected: (() => void) | null;
-
-    onReceiveData: ((id: string, message: T) => void) | null;
-    onReceiveError: ((id: string, error: any[]) => void) | null;
-    onReceiveCompleted: ((id: string) => void) | null;
-
-    onSessionLost: (() => void) | null;
-
-    post(id: string, message: T): void;
-    cancel(id: string): void;
-
-    connect(): void;
-    close(): void;
-}
+import { TransportLayer } from './TransportLayer';
 
 const SOCKET_TIMEOUT = 5000;
 const PING_INTERVAL = 1000;
 
-export class StableApolloSocket implements StableSocket<any> {
+export class ApolloTransportLayer implements TransportLayer {
     private readonly opts: WebEngineOpts;
 
     onReceiveData: ((id: string, message: any) => void) | null = null;
@@ -44,7 +28,7 @@ export class StableApolloSocket implements StableSocket<any> {
         this.opts = opts;
     }
 
-    post(id: string, message: any) {
+    request(id: string, message: { id: string, name: string, query: string, variables: any }) {
         if (this.state === 'waiting' || this.state === 'connecting') {
 
             // Add to pending buffer if we are not connected already
@@ -58,13 +42,21 @@ export class StableApolloSocket implements StableSocket<any> {
             this.writeToSocket({
                 type: 'start',
                 'id': id,
-                'payload': message
+                'payload': {
+                    query: message.query,
+                    name: message.name,
+                    variables: message.variables
+                }
             });
         } else if (this.state === 'started') {
             this.writeToSocket({
                 type: 'start',
                 'id': id,
-                'payload': message
+                'payload': {
+                    query: message.query,
+                    name: message.name,
+                    variables: message.variables
+                }
             });
         } else if (this.state === 'completed') {
             // Silently ignore if connection is completed
@@ -207,7 +199,12 @@ export class StableApolloSocket implements StableSocket<any> {
             console.log('[WS] Connecting');
         }
         let protocol = this.opts.protocol || 'apollo';
-        let ws = new ThrustedSocket(this.opts.endpoint, SOCKET_TIMEOUT, protocol === 'apollo' ? 'graphql-ws' : undefined);
+        let ws = new ThrustedSocket({
+            url: this.opts.endpoint,
+            timeout: SOCKET_TIMEOUT,
+            protocol: protocol === 'apollo' ? 'graphql-ws' : undefined,
+            engine: this.opts.ws
+        });
         ws.onopen = () => {
             if (this.client !== ws) {
                 return;

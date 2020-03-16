@@ -37,3 +37,4 @@ export const WebDefinitions = WebDefinitionTypes;
 export { OperationDefinition, Definitions } from './web/types';
 export { QueryCacheProvider } from './QueryCache';
 export { SpaceQueryWatchParameters, BaseSpaceXClient } from './BaseSpaceXClient';
+export { TransportResult } from './web/transport/WebTransport';

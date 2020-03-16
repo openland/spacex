@@ -6,6 +6,8 @@ import { WebTransport } from './transport/WebTransport';
 import { WebStore } from './store/WebStore';
 import { randomKey } from '../utils/randomKey';
 import { Queue } from '../utils/Queue';
+import { WebSocketEngine } from './transport/WebSocketEngine';
+import { TransportLayer } from './transport/TransportLayer';
 
 class QueryWatchState {
     hasValue: boolean = false;
@@ -20,6 +22,8 @@ export interface WebEngineOpts {
     protocol?: 'apollo' | 'openland';
     onConnectionFailed?: (message: string) => void;
     logging?: boolean;
+    ws?: WebSocketEngine;
+    transport?: TransportLayer;
 }
 
 export class WebEngine implements GraphqlEngine {

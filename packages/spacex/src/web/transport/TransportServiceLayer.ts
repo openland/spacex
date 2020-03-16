@@ -1,8 +1,9 @@
+import { ApolloTransportLayer } from './ApolloTransportLayer';
 import { WebEngineOpts } from './../WebEngine';
 import { GraphqlEngineStatus } from './../../GraphqlEngine';
-import { StableSocket, StableApolloSocket } from './StableSocket';
 import { OperationDefinition } from './../types';
 import { TransportResult } from './WebTransport';
+import { TransportLayer } from './TransportLayer';
 
 type PendingOperation = { id: string, reqiestId: string, operation: OperationDefinition, variables: any, callback: (result: TransportResult) => void };
 
@@ -10,12 +11,12 @@ export class TransportServiceLayer {
     private nextId = 1;
     private readonly liveOperations = new Map<string, PendingOperation>();
     private readonly liveOperationsIds = new Map<string, string>();
-    private readonly socket: StableSocket<any>;
+    private readonly transport: TransportLayer;
     onStatusChanged: ((status: GraphqlEngineStatus) => void) | null = null;
 
     constructor(opts: WebEngineOpts) {
-        this.socket = new StableApolloSocket(opts);
-        this.socket.onConnected = () => {
+        this.transport = opts.transport ? opts.transport : new ApolloTransportLayer(opts);
+        this.transport.onConnected = () => {
             if (opts.logging) {
                 console.log('[TX] Connected');
             }
@@ -23,7 +24,7 @@ export class TransportServiceLayer {
                 this.onStatusChanged({ status: 'connected' });
             }
         };
-        this.socket.onDisconnected = () => {
+        this.transport.onDisconnected = () => {
             if (opts.logging) {
                 console.log('[TX] Disconnected');
             }
@@ -33,7 +34,7 @@ export class TransportServiceLayer {
         };
 
         // Operation Callbacks
-        this.socket.onReceiveData = (id, msg) => {
+        this.transport.onReceiveData = (id, msg) => {
             let rid = this.liveOperationsIds.get(id);
             if (rid) {
                 let op = this.liveOperations.get(rid);
@@ -46,7 +47,7 @@ export class TransportServiceLayer {
                 }
             }
         };
-        this.socket.onReceiveError = (id, errors) => {
+        this.transport.onReceiveError = (id, errors) => {
             let rid = this.liveOperationsIds.get(id);
             if (rid) {
                 let op = this.liveOperations.get(rid);
@@ -57,7 +58,7 @@ export class TransportServiceLayer {
                 }
             }
         };
-        this.socket.onReceiveCompleted = (id) => {
+        this.transport.onReceiveCompleted = (id) => {
             let rid = this.liveOperationsIds.get(id);
             if (rid) {
                 let op = this.liveOperations.get(rid);
@@ -69,7 +70,7 @@ export class TransportServiceLayer {
             }
         };
 
-        this.socket.onSessionLost = () => {
+        this.transport.onSessionLost = () => {
             if (opts.logging) {
                 console.log('[TX] Session lost');
             }
@@ -86,7 +87,7 @@ export class TransportServiceLayer {
                 }
             }
         };
-        this.socket.connect();
+        this.transport.connect();
     }
 
     operation = (operation: OperationDefinition, variables: any, callback: (result: TransportResult) => void) => {
@@ -107,7 +108,7 @@ export class TransportServiceLayer {
     }
 
     private flushQueryStart(op: PendingOperation) {
-        this.socket.post(op.reqiestId, {
+        this.transport.request(op.reqiestId, {
             query: op.operation.body,
             name: op.operation.name,
             variables: op.variables
@@ -115,6 +116,6 @@ export class TransportServiceLayer {
     }
 
     private flushQueryStop(op: PendingOperation) {
-        this.socket.cancel(op.reqiestId);
+        this.transport.cancel(op.reqiestId);
     }
 }

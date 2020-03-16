@@ -1,6 +1,4 @@
-import WebSocket from 'isomorphic-ws';
-
-const empty = () => { /* */ };
+import { WebSocketConnection, WebSocketEngine, DefaultWebSocketEngine } from './../WebSocketEngine';
 
 export type ThrusterConfig = { url: string, timeout: number };
 
@@ -10,24 +8,31 @@ export type ThrusterConfig = { url: string, timeout: number };
  */
 export class Thruster {
     readonly configs: ThrusterConfig[];
-    readonly onSuccess: (socket: WebSocket) => void;
+    readonly onSuccess: (socket: WebSocketConnection) => void;
     readonly protocol?: string;
 
-    private bucketSockets: (WebSocket | null)[] = [];
+    private engine: WebSocketEngine;
+    private bucketSockets: (WebSocketConnection | null)[] = [];
     private bucketTimeout: any[] = [];
     private closed = false;
 
-    constructor(configs: ThrusterConfig[], onSuccess: (socket: WebSocket) => void, protocol?: string) {
-        this.configs = configs;
-        this.onSuccess = onSuccess;
-        this.protocol = protocol;
+    constructor(opts: {
+        engine?: WebSocketEngine,
+        configs: ThrusterConfig[],
+        protocol?: string,
+        onSuccess: (socket: WebSocketConnection) => void
+    }) {
+        this.engine = opts.engine || DefaultWebSocketEngine;
+        this.configs = opts.configs;
+        this.onSuccess = opts.onSuccess;
+        this.protocol = opts.protocol;
 
-        for (let i = 0; i < configs.length; i++) {
+        for (let i = 0; i < opts.configs.length; i++) {
             this.bucketSockets.push(null);
             this.bucketTimeout.push(null);
         }
 
-        for (let i = 0; i < configs.length; i++) {
+        for (let i = 0; i < opts.configs.length; i++) {
             this.restartBucket(i);
         }
     }
@@ -40,14 +45,10 @@ export class Thruster {
         if (this.bucketSockets[bucket]) {
             let ex = this.bucketSockets[bucket]!;
             this.bucketSockets[bucket] = null;
-            ex.onclose = empty;
-            ex.onopen = empty;
-            ex.onmessage = empty;
-            try {
-                ex.close();
-            } catch (e) {
-                // Ignore
-            }
+            ex.onclose = null;
+            ex.onopen = null;
+            ex.onmessage = null;
+            ex.close();
         }
 
         // Clear timeout
@@ -56,7 +57,7 @@ export class Thruster {
             this.bucketTimeout[bucket] = null;
         }
 
-        const ws = new WebSocket(url, this.protocol);
+        const ws = this.engine.create(url, this.protocol);
         this.bucketSockets[bucket] = ws;
         ws.onopen = () => {
 
@@ -71,8 +72,8 @@ export class Thruster {
             }
 
             // Remove callbacks and invoke onSuccess callback
-            ws.onopen = empty;
-            ws.onclose = empty;
+            ws.onopen = null;
+            ws.onclose = null;
             this.onSuccess(ws);
         };
 
@@ -103,14 +104,10 @@ export class Thruster {
             let ex = this.bucketSockets[i];
             this.bucketSockets[i] = null;
             if (ex) {
-                ex.onclose = empty;
-                ex.onopen = empty;
-                ex.onmessage = empty;
-                try {
-                    ex.close();
-                } catch (e) {
-                    // Ignore
-                }
+                ex.onclose = null;
+                ex.onopen = null;
+                ex.onmessage = null;
+                ex.close();
             }
 
             // Clear Timeout
