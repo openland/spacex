@@ -47,7 +47,7 @@ export class WebEngine implements GraphqlEngine {
     }
 
     close() {
-        throw new GraphqlUnknownError('not yet implemented');
+        this.transport.close();
     }
 
     watchStatus(handler: (status: GraphqlEngineStatus) => void) {

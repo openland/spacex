@@ -37,4 +37,8 @@ export class WebTransport {
     subscription = (operation: OperationDefinition, vars: any, callback: (result: TransportResult) => void): (() => void) => {
         return this.serviceLayer.operation(operation, vars, callback);
     }
+
+    close() {
+        this.close();
+    }
 }

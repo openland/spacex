@@ -107,6 +107,10 @@ export class TransportServiceLayer {
         };
     }
 
+    close() {
+        this.transport.close();
+    }
+
     private flushQueryStart(op: PendingOperation) {
         this.transport.request(op.reqiestId, {
             query: op.operation.body,
