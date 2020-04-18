@@ -47,6 +47,9 @@ class DefaultWebSocketConnection implements WebSocketConnection {
         this._ws.onerror = () => {
             this.close();
         };
+        this._ws.on('error', () => {
+            this.close();
+        });
     }
 
     send(message: string) {
