@@ -16,7 +16,7 @@ function collectMissingKeysFromSelectors(cacheKey: string, store: RecordStore, s
                 collectMissingKeysFromValue(record.fields[key], f.fieldType, store, variables, res);
             }
         } else if (f.type === 'type-condition') {
-            if (record.fields.__typename && record.fields.__typename.type === 'string' && record.fields.__typename.value === f.type) {
+            if (record.fields.__typename && record.fields.__typename.type === 'string' && record.fields.__typename.value === f.name) {
                 collectMissingKeysFromSelectors(cacheKey, store, f.fragmentType.selectors, variables, res);
             }
         } else if (f.type === 'fragment') {
