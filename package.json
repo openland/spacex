@@ -6,21 +6,25 @@
     "dev": "journey dev sample",
     "build": "journey build",
     "clean": "journey clean",
+    "test": "yarn jest",
     "release": "yarn build && cd ./packages/spacex && yarn publish",
     "export": "journey export sample"
   },
   "devDependencies": {
     "@haystackjs/journey": "2.2.1",
+    "@types/jest": "^25.2.1",
     "@types/react": "^16.9.19",
     "@types/react-dom": "^16.9.5",
     "@types/uuid": "^3.4.7",
     "react": "^16.12.0",
-    "react-dom": "^16.12.0"
+    "react-dom": "^16.12.0",
+    "ts-jest": "^25.4.0"
   },
   "dependencies": {
     "@openland/spacex-cli": "1.0.1",
     "@types/ws": "^7.2.1",
     "isomorphic-ws": "4.0.1",
+    "jest": "^25.5.0",
     "typescript": "*",
     "uuid": "3.4.0",
     "ws": "7.2.1"

@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "downlevelIteration": true,
+    "baseUrl": "packages",
+    "outDir": "./output",
+    "paths": {
+      "sample": [
+        "sample/src"
+      ],
+      "spacex": [
+        "spacex/src"
+      ]
+    }
+  }
+}
