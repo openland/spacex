@@ -7,7 +7,7 @@
     "build": "journey build",
     "clean": "journey clean",
     "test": "yarn jest",
-    "release": "yarn build && cd ./packages/spacex && yarn publish",
+    "release": "yarn build && yarn jest && cd ./packages/spacex && yarn publish",
     "export": "journey export sample"
   },
   "devDependencies": {
