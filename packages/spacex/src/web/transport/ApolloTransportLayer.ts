@@ -3,7 +3,7 @@ import { GraphqlUnknownError } from '../../GraphqlError';
 import { ThrustedSocket } from './net/ThrustedSocket';
 import { TransportLayer } from './TransportLayer';
 
-const SOCKET_TIMEOUT = 5000;
+const SOCKET_TIMEOUT = 10000;
 const PING_INTERVAL = 1000;
 
 export class ApolloTransportLayer implements TransportLayer {
