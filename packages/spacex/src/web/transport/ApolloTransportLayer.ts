@@ -3,7 +3,8 @@ import { GraphqlUnknownError } from '../../GraphqlError';
 import { ThrustedSocket } from './net/ThrustedSocket';
 import { TransportLayer } from './TransportLayer';
 
-const SOCKET_TIMEOUT = 10000;
+const APOLLO_SOCKET_TIMEOUT = 10000;
+const OPENLAND_SOCKET_TIMEOUT = 5000;
 const PING_INTERVAL = 1000;
 
 export class ApolloTransportLayer implements TransportLayer {
@@ -201,7 +202,7 @@ export class ApolloTransportLayer implements TransportLayer {
         let protocol = this.opts.protocol || 'apollo';
         let ws = new ThrustedSocket({
             url: this.opts.endpoint,
-            timeout: SOCKET_TIMEOUT,
+            timeout: protocol === 'openland' ? OPENLAND_SOCKET_TIMEOUT : APOLLO_SOCKET_TIMEOUT,
             protocol: protocol === 'apollo' ? 'graphql-ws' : undefined,
             engine: this.opts.ws
         });
