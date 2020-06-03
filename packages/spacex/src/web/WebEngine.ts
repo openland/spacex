@@ -196,6 +196,7 @@ export class WebEngine implements GraphqlEngine {
                     }
                     if (reload) {
                         onError(new GraphqlUnknownError('Mailformed response'));
+                        return;
                     }
                 }
 
