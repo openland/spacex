@@ -17,7 +17,9 @@ import { PriorityContext, ReactPriorityContext } from './PriorityContext';
 export type SpaceQueryWatchParameters = QueryWatchParameters & { suspense?: boolean };
 
 export interface SpaceXClientParameters {
+    engine: GraphqlEngine;
     defaultPriority?: PriorityContext | null;
+    globalCache?: QueryCache | null;
 }
 
 export class BaseSpaceXClient {
@@ -25,9 +27,13 @@ export class BaseSpaceXClient {
     readonly defaultPriority: PriorityContext | null | null;
     readonly globalCache: QueryCache;
 
-    constructor(engine: GraphqlEngine, globalCache: QueryCache, params?: SpaceXClientParameters) {
-        this.engine = engine;
-        this.globalCache = globalCache;
+    constructor(params: SpaceXClientParameters) {
+        this.engine = params.engine;
+        if (params.globalCache) {
+            this.globalCache = params.globalCache;
+        } else {
+            this.globalCache = new QueryCache();
+        }
         if (params && params.defaultPriority) {
             this.defaultPriority = params.defaultPriority;
         } else {

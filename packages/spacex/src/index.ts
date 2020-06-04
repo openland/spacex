@@ -37,8 +37,8 @@ export { WebEngine } from './web/WebEngine';
 import * as WebDefinitionTypes from './web/types';
 export const WebDefinitions = WebDefinitionTypes;
 export { OperationDefinition, Definitions } from './web/types';
-export { QueryCacheProvider } from './QueryCache';
-export { SpaceQueryWatchParameters, BaseSpaceXClient } from './BaseSpaceXClient';
+export { QueryCacheProvider, QueryCache } from './QueryCache';
+export { SpaceQueryWatchParameters, BaseSpaceXClient, SpaceXClientParameters } from './BaseSpaceXClient';
 export { TransportResult } from './web/transport/WebTransport';
 
 export {
