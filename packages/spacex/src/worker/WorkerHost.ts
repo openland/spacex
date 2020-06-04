@@ -33,7 +33,7 @@ export class WorkerHost {
                 this.postError(msg.id, v);
             });
         } else if (msg.type === 'mutate') {
-            this.engine.mutate(msg.mutation, msg.variables).then((v) => {
+            this.engine.mutate(msg.mutation, msg.variables, msg.params).then((v) => {
                 this.postResult(msg.id, v);
             }).catch((v) => {
                 this.postError(msg.id, v);
@@ -84,7 +84,7 @@ export class WorkerHost {
                 } else {
                     console.warn('Unknown subscription result: ', src);
                 }
-            }, msg.subscription, msg.variables);
+            }, msg.subscription, msg.variables, msg.params);
             this.subscriptions.set(id, subscription);
         } else if (msg.type === 'subscribe-destroy') {
             this.subscriptions.get(msg.id)!!.destroy();

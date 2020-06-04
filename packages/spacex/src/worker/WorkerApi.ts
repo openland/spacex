@@ -1,4 +1,4 @@
-import { OperationParameters } from './../GraphqlEngine';
+import { QueryParameters, QueryWatchParameters, SubscriptionParameters, MutationParameters } from './../GraphqlEngine';
 export interface WorkerInterface {
     setHandler(handler: ((data: any) => void)): void;
     post(data: any): void;
@@ -9,13 +9,13 @@ export type WorkerRequestType = 'init' | 'query' | 'watch' | 'refetch' | 'mutate
 export type WorkerRequest = {
     id: string;
 } & (
-        { type: 'query', query: string, variables: any, params?: OperationParameters } |
-        { type: 'mutate', mutation: string, variables: any } |
+        { type: 'query', query: string, variables: any, params?: QueryParameters } |
+        { type: 'mutate', mutation: string, variables: any, params?: MutationParameters } |
 
-        { type: 'watch', query: string, variables: any, params?: OperationParameters } |
+        { type: 'watch', query: string, variables: any, params?: QueryWatchParameters } |
         { type: 'watch-destroy' } |
 
-        { type: 'subscribe', subscription: string, variables: any } |
+        { type: 'subscribe', subscription: string, variables: any, params?: SubscriptionParameters } |
         { type: 'subscribe-destroy' } |
 
         { type: 'read', query: string, variables: any } |
