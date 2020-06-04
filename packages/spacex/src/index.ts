@@ -4,8 +4,10 @@ export {
     GraphqlActiveSubscription,
     GraphqlQueryResult,
     GraphqlQueryWatch,
-    OperationParameters,
+    QueryParameters,
+    MutationParameters,
     QueryWatchParameters,
+    SubscriptionParameters,
     GraphqlSubscriptionHandler
 } from './GraphqlEngine';
 export {
@@ -38,3 +40,8 @@ export { OperationDefinition, Definitions } from './web/types';
 export { QueryCacheProvider } from './QueryCache';
 export { SpaceQueryWatchParameters, BaseSpaceXClient } from './BaseSpaceXClient';
 export { TransportResult } from './web/transport/WebTransport';
+
+export {
+    PriorityContext,
+    ReactPriorityContext
+} from './PriorityContext';

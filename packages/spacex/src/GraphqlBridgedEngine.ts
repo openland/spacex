@@ -3,10 +3,13 @@ import { randomKey } from './utils/randomKey';
 import {
     GraphqlEngine,
     GraphqlEngineStatus,
-    OperationParameters,
+    QueryParameters,
+    QueryWatchParameters,
     GraphqlQueryWatch,
     GraphqlActiveSubscription,
-    GraphqlSubscriptionHandler
+    GraphqlSubscriptionHandler,
+    MutationParameters,
+    SubscriptionParameters
 } from './GraphqlEngine';
 
 class BridgedQueryWatch {
@@ -40,14 +43,14 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
     // Query
     //
 
-    async query<TQuery, TVars>(query: string, vars?: TVars, params?: OperationParameters): Promise<TQuery> {
+    async query<TQuery, TVars>(query: string, vars?: TVars, params?: QueryParameters): Promise<TQuery> {
         let id = this.nextKey();
         let res = this.registerPromiseHandler<TQuery>(id);
         this.postQuery(id, query, vars, params);
         return await res;
     }
 
-    queryWatch<TQuery, TVars>(query: string, vars?: TVars, params?: OperationParameters): GraphqlQueryWatch<TQuery> {
+    queryWatch<TQuery, TVars>(query: string, vars?: TVars, params?: QueryWatchParameters): GraphqlQueryWatch<TQuery> {
         let id = this.nextKey();
         let watch = new BridgedQueryWatch();
         let callbacks = new Map<string, (args: { data?: TQuery, error?: Error }) => void>();
@@ -64,7 +67,7 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
             if (completed) {
                 return;
             }
-            
+
             // Update State
             if (error) {
                 watch.hasError = true;
@@ -142,7 +145,7 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
     // Subscription
     //
 
-    subscribe<TSubscription, TVars>(handler: GraphqlSubscriptionHandler<TSubscription>, subscription: string, vars?: TVars): GraphqlActiveSubscription<TSubscription> {
+    subscribe<TSubscription, TVars>(handler: GraphqlSubscriptionHandler<TSubscription>, subscription: string, vars?: TVars, params?: SubscriptionParameters): GraphqlActiveSubscription<TSubscription> {
         let destroyed = false;
 
         // Set Handler
@@ -162,7 +165,7 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
         });
 
         // Subscribe
-        this.postSubscribe(id, subscription, vars);
+        this.postSubscribe(id, subscription, vars, params);
 
         return {
             destroy: () => {
@@ -223,13 +226,13 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
         }
     }
 
-    protected abstract postQuery<TVars>(id: string, query: string, vars?: TVars, params?: OperationParameters): void;
-    protected abstract postQueryWatch<TVars>(id: string, query: string, vars?: TVars, params?: OperationParameters): void;
+    protected abstract postQuery<TVars>(id: string, query: string, vars?: TVars, params?: QueryParameters): void;
+    protected abstract postQueryWatch<TVars>(id: string, query: string, vars?: TVars, params?: QueryWatchParameters): void;
     protected abstract postQueryWatchEnd(id: string): void;
 
-    protected abstract postMutation<TVars>(id: string, query: string, vars?: TVars): void;
+    protected abstract postMutation<TVars>(id: string, query: string, vars?: TVars, params?: MutationParameters): void;
 
-    protected abstract postSubscribe<TVars>(id: string, query: string, vars?: TVars): void;
+    protected abstract postSubscribe<TVars>(id: string, query: string, vars?: TVars, params?: SubscriptionParameters): void;
     protected abstract postUnsubscribe(id: string): void;
 
     protected abstract postReadQuery<TVars>(id: string, query: string, vars?: TVars): void;

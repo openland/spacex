@@ -1,3 +1,4 @@
+import { PriorityContext } from './PriorityContext';
 //
 // Subscription
 //
@@ -25,12 +26,26 @@ export interface GraphqlQueryWatch<TQuery> {
 // Parameters
 //
 
-export interface OperationParameters {
+export interface QueryParameters {
     fetchPolicy?: 'cache-first' | 'network-only' | 'cache-and-network' | 'no-cache';
+    priority?: number | PriorityContext;
+    customSettings?: any;
+}
+
+export interface MutationParameters {
+    priority?: number | PriorityContext;
+    customSettings?: any;
 }
 
 export interface QueryWatchParameters {
     fetchPolicy?: 'cache-first' | 'network-only' | 'cache-and-network';
+    priority?: number | PriorityContext;
+    customSettings?: any;
+}
+
+export interface SubscriptionParameters {
+    priority?: number | PriorityContext;
+    customSettings?: any;
 }
 
 //
@@ -56,10 +71,10 @@ export interface GraphqlEngine {
      */
     watchStatus(handler: (status: GraphqlEngineStatus) => void): () => void;
 
-    query<TQuery, TVars>(query: string, vars?: TVars, params?: OperationParameters): Promise<TQuery>;
-    queryWatch<TQuery, TVars>(query: string, vars?: TVars, params?: OperationParameters): GraphqlQueryWatch<TQuery>;
-    mutate<TMutation, TVars>(mutation: string, vars?: TVars): Promise<TMutation>;
-    subscribe<TSubscription, TVars>(handler: GraphqlSubscriptionHandler<TSubscription>, subscription: string, vars?: TVars): GraphqlActiveSubscription<TSubscription>;
+    query<TQuery, TVars>(query: string, vars?: TVars, params?: QueryParameters): Promise<TQuery>;
+    queryWatch<TQuery, TVars>(query: string, vars?: TVars, params?: QueryWatchParameters): GraphqlQueryWatch<TQuery>;
+    mutate<TMutation, TVars>(mutation: string, vars?: TVars, params?: MutationParameters): Promise<TMutation>;
+    subscribe<TSubscription, TVars>(handler: GraphqlSubscriptionHandler<TSubscription>, subscription: string, vars?: TVars, params?: SubscriptionParameters): GraphqlActiveSubscription<TSubscription>;
 
     updateQuery<TQuery, TVars>(updater: (data: TQuery) => TQuery | null, query: string, vars?: TVars): Promise<boolean>;
     readQuery<TQuery, TVars>(query: string, vars?: TVars): Promise<TQuery | null>;

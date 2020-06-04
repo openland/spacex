@@ -1,4 +1,14 @@
-import { GraphqlEngine, GraphqlEngineStatus, OperationParameters, GraphqlQueryWatch, GraphqlQueryResult, GraphqlSubscriptionHandler } from './GraphqlEngine';
+import {
+    GraphqlEngine,
+    GraphqlEngineStatus,
+    QueryParameters,
+    QueryWatchParameters,
+    GraphqlQueryWatch,
+    GraphqlQueryResult,
+    GraphqlSubscriptionHandler,
+    MutationParameters,
+    SubscriptionParameters
+} from './GraphqlEngine';
 import { Watcher } from './utils/Watcher';
 import { backoff } from './utils/backoff';
 import { randomKey } from './utils/randomKey';
@@ -35,7 +45,7 @@ export class RetryEngine implements GraphqlEngine {
         });
     }
 
-    async query<TQuery, TVars>(query: string, vars?: TVars, params?: OperationParameters): Promise<TQuery> {
+    async query<TQuery, TVars>(query: string, vars?: TVars, params?: QueryParameters): Promise<TQuery> {
         let res = await backoff(async () => {
             while (true) {
                 try {
@@ -60,11 +70,11 @@ export class RetryEngine implements GraphqlEngine {
             throw res.error;
         }
     }
-    async mutate<TMutation, TVars>(mutation: string, vars?: TVars): Promise<TMutation> {
+    async mutate<TMutation, TVars>(mutation: string, vars?: TVars, params?: MutationParameters): Promise<TMutation> {
         let res = await backoff(async () => {
             while (true) {
                 try {
-                    let r = await this.inner.mutate<TMutation, TVars>(mutation, vars);
+                    let r = await this.inner.mutate<TMutation, TVars>(mutation, vars, params);
                     return { type: 'result', result: r };
                 } catch (e) {
                     let processed = this.errorHandler(e);
@@ -86,7 +96,7 @@ export class RetryEngine implements GraphqlEngine {
         }
     }
 
-    queryWatch<TQuery, TVars>(query: string, vars?: TVars, params?: OperationParameters): GraphqlQueryWatch<TQuery> {
+    queryWatch<TQuery, TVars>(query: string, vars?: TVars, params?: QueryWatchParameters): GraphqlQueryWatch<TQuery> {
         let destroyed = false;
         let currentWatch: GraphqlQueryWatch<TQuery> | undefined;
         let currentWatchSubscriber: (() => void) | undefined;
@@ -221,8 +231,8 @@ export class RetryEngine implements GraphqlEngine {
         };
     }
 
-    subscribe<TSubscription, TVars>(handler: GraphqlSubscriptionHandler<TSubscription>, subscription: string, vars?: TVars) {
-        return this.inner.subscribe<TSubscription, TVars>(handler, subscription, vars);
+    subscribe<TSubscription, TVars>(handler: GraphqlSubscriptionHandler<TSubscription>, subscription: string, vars?: TVars, params?: SubscriptionParameters) {
+        return this.inner.subscribe<TSubscription, TVars>(handler, subscription, vars, params);
     }
     updateQuery<TQuery, TVars>(updater: (data: TQuery) => TQuery | null, query: string, vars?: TVars) {
         return this.inner.updateQuery<TQuery, TVars>(updater, query, vars);

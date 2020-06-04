@@ -1,40 +1,63 @@
-import { QueryCacheContext } from './QueryCache';
-import { QueryWatchParameters, GraphqlEngine, GraphqlQueryWatch, OperationParameters, GraphqlSubscriptionHandler, GraphqlActiveSubscription, GraphqlQueryResult } from './GraphqlEngine';
+import { QueryCacheContext, QueryCache } from './QueryCache';
+import {
+    QueryWatchParameters,
+    GraphqlEngine,
+    GraphqlQueryWatch,
+    QueryParameters,
+    GraphqlSubscriptionHandler,
+    GraphqlActiveSubscription,
+    GraphqlQueryResult,
+    MutationParameters,
+    SubscriptionParameters
+} from './GraphqlEngine';
 import * as React from 'react';
 import { keyFromObject } from './utils/keyFromObject';
+import { PriorityContext, ReactPriorityContext } from './PriorityContext';
 
 export type SpaceQueryWatchParameters = QueryWatchParameters & { suspense?: boolean };
 
+export interface SpaceXClientParameters {
+    defaultPriority?: PriorityContext | null;
+}
+
 export class BaseSpaceXClient {
     readonly engine: GraphqlEngine;
-    private queries = new Map<String, GraphqlQueryWatch<{}>>();
+    readonly defaultPriority: PriorityContext | null | null;
+    readonly globalCache: QueryCache;
 
-    constructor(engine: GraphqlEngine) {
+    constructor(engine: GraphqlEngine, globalCache: QueryCache, params?: SpaceXClientParameters) {
         this.engine = engine;
+        this.globalCache = globalCache;
+        if (params && params.defaultPriority) {
+            this.defaultPriority = params.defaultPriority;
+        } else {
+            this.defaultPriority = null;
+        }
+        Object.freeze(this);
     }
 
     close = () => {
         this.engine.close();
     }
 
-    protected query<TQuery, TVars>(query: string, vars: TVars, opts?: OperationParameters): Promise<TQuery> {
+    protected query<TQuery, TVars>(query: string, vars: TVars, opts?: QueryParameters): Promise<TQuery> {
         return this.engine.query<TQuery, TVars>(query, vars, opts);
     }
 
-    protected refetch<TQuery, TVars>(query: string, vars?: TVars): Promise<TQuery> {
-        return this.engine.query<TQuery, TVars>(query, vars, { fetchPolicy: 'network-only' });
+    protected refetch<TQuery, TVars>(query: string, vars?: TVars, opts?: QueryParameters): Promise<TQuery> {
+        return this.engine.query<TQuery, TVars>(query, vars, { fetchPolicy: 'network-only', ...opts });
     }
 
     protected updateQuery<TQuery, TVars>(updater: (data: TQuery) => TQuery | null, query: string, vars?: TVars): Promise<boolean> {
         return this.engine.updateQuery<TQuery, TVars>(updater, query, vars);
     }
 
-    protected mutate<TQuery, TVars>(mutation: string, vars?: TVars): Promise<TQuery> {
-        return this.engine.mutate<TQuery, TVars>(mutation, vars);
+    protected mutate<TQuery, TVars>(mutation: string, vars?: TVars, params?: MutationParameters): Promise<TQuery> {
+        return this.engine.mutate<TQuery, TVars>(mutation, vars, params);
     }
 
-    protected subscribe<TSubscription, TVars>(handler: GraphqlSubscriptionHandler<TSubscription>, subscription: string, vars?: TVars): GraphqlActiveSubscription<TSubscription> {
-        return this.engine.subscribe<TSubscription, TVars>(handler, subscription, vars);
+    protected subscribe<TSubscription, TVars>(handler: GraphqlSubscriptionHandler<TSubscription>, subscription: string, vars?: TVars, params?: SubscriptionParameters): GraphqlActiveSubscription<TSubscription> {
+        return this.engine.subscribe<TSubscription, TVars>(handler, subscription, vars, params);
     }
 
     protected useQuery<TQuery, TVars>(query: string, vars: TVars, opts: SpaceQueryWatchParameters & { suspense: false }): TQuery | null;
@@ -77,7 +100,7 @@ export class BaseSpaceXClient {
         if (!clientCache && (opts && opts.fetchPolicy && (opts.fetchPolicy === 'cache-and-network' || opts.fetchPolicy === 'network-only'))) {
             throw Error('Unable to use cache-and-network or network-only fetch policy outside of cache context');
         }
-        const observableQuery = this.getQueryWatch<TQuery, TVars>(clientCache ? clientCache.queries : this.queries, query, vars, opts);
+        const observableQuery = this.getQueryWatch<TQuery, TVars>((clientCache ? clientCache : this.globalCache).queries, query, vars, opts);
 
         // Value Holder
         const [responseId, setResponseId] = React.useState(0);
@@ -96,11 +119,18 @@ export class BaseSpaceXClient {
     }
 
     private getQueryWatch<TQuery, TVars>(cache: Map<String, GraphqlQueryWatch<{}>>, query: string, vars?: TVars, opts?: QueryWatchParameters): GraphqlQueryWatch<TQuery> {
+        let defaultPriority: number | PriorityContext | undefined = undefined;
+        let priorityContext = React.useContext(ReactPriorityContext);
+        if (priorityContext) {
+            defaultPriority = priorityContext;
+        } else if (this.defaultPriority !== null) {
+            defaultPriority = this.defaultPriority;
+        }
         let shouldBeScoped = opts && opts.fetchPolicy && (opts.fetchPolicy === 'cache-and-network' || opts.fetchPolicy === 'network-only');
         let cacheKey = (opts && opts.fetchPolicy && opts.fetchPolicy) || 'cache-first';
         let q = cache;
         if (!shouldBeScoped) {
-            q = this.queries;
+            q = this.globalCache.queries;
         }
         let key = query + '$' + keyFromObject(vars) + '$' + cacheKey;
         if (q.has(key)) {
@@ -108,7 +138,7 @@ export class BaseSpaceXClient {
             // so there is no need to refetch data manually here
             return q.get(key)!! as GraphqlQueryWatch<TQuery>;
         } else {
-            let res = this.engine.queryWatch<TQuery, TVars>(query, vars, opts);
+            let res = this.engine.queryWatch<TQuery, TVars>(query, vars, { priority: defaultPriority, ...opts });
             q.set(key, res);
             return res;
         }

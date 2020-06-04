@@ -1,11 +1,21 @@
 import { GraphqlUnknownError, GraphqlError } from '../GraphqlError';
 import { Watcher } from '../utils/Watcher';
-import { GraphqlEngine, GraphqlEngineStatus, OperationParameters, GraphqlQueryWatch, GraphqlQueryResult, GraphqlSubscriptionHandler, GraphqlActiveSubscription } from '../GraphqlEngine';
+import {
+    GraphqlEngine,
+    GraphqlEngineStatus,
+    QueryParameters,
+    GraphqlQueryWatch,
+    QueryWatchParameters,
+    GraphqlQueryResult,
+    GraphqlSubscriptionHandler,
+    GraphqlActiveSubscription,
+    MutationParameters,
+    SubscriptionParameters
+} from '../GraphqlEngine';
 import { Definitions } from './types';
 import { WebTransport } from './transport/WebTransport';
 import { WebStore } from './store/WebStore';
 import { randomKey } from '../utils/randomKey';
-import { Queue } from '../utils/Queue';
 import { WebSocketEngine } from './transport/WebSocketEngine';
 import { TransportLayer } from './transport/TransportLayer';
 
@@ -58,7 +68,7 @@ export class WebEngine implements GraphqlEngine {
     // Operations
     //
 
-    async query<TQuery, TVars>(query: string, vars?: TVars, params?: OperationParameters): Promise<TQuery> {
+    async query<TQuery, TVars>(query: string, vars?: TVars, params?: QueryParameters): Promise<TQuery> {
         let operation = this.definitions.operations[query];
         if (!operation) {
             throw new GraphqlUnknownError('Unknown operation');
@@ -98,7 +108,7 @@ export class WebEngine implements GraphqlEngine {
             throw new GraphqlUnknownError('Internal error');
         }
     }
-    queryWatch<TQuery, TVars>(query: string, vars?: TVars, params?: OperationParameters): GraphqlQueryWatch<TQuery> {
+    queryWatch<TQuery, TVars>(query: string, vars?: TVars, params?: QueryWatchParameters): GraphqlQueryWatch<TQuery> {
         let operation = this.definitions.operations[query];
         let fetchPolicy: 'cache-first' | 'network-only' | 'cache-and-network' | 'no-cache' = 'cache-first';
         if (params && params.fetchPolicy) {
@@ -249,7 +259,7 @@ export class WebEngine implements GraphqlEngine {
         };
     }
 
-    async mutate<TMutation, TVars>(mutation: string, vars?: TVars): Promise<TMutation> {
+    async mutate<TMutation, TVars>(mutation: string, vars?: TVars, params?: MutationParameters): Promise<TMutation> {
         let operation = this.definitions.operations[mutation];
         if (!operation) {
             throw new GraphqlUnknownError('Unknown operation');
@@ -273,7 +283,7 @@ export class WebEngine implements GraphqlEngine {
         }
     }
 
-    subscribe<TSubscription, TVars>(handler: GraphqlSubscriptionHandler<TSubscription>, subscription: string, vars?: TVars): GraphqlActiveSubscription<TSubscription> {
+    subscribe<TSubscription, TVars>(handler: GraphqlSubscriptionHandler<TSubscription>, subscription: string, vars?: TVars, params?: SubscriptionParameters): GraphqlActiveSubscription<TSubscription> {
         let operation = this.definitions.operations[subscription];
         if (!operation) {
             throw new GraphqlUnknownError('Unknown operation');
@@ -282,7 +292,6 @@ export class WebEngine implements GraphqlEngine {
             throw new GraphqlUnknownError('Invalid operation kind');
         }
         let completed = false;
-        let queue = new Queue();
         let runningOperation = this.transport.subscription(operation, vars, (s) => {
             if (completed) {
                 return;
