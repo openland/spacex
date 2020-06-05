@@ -42,6 +42,5 @@ export { SpaceQueryWatchParameters, BaseSpaceXClient, SpaceXClientParameters } f
 export { TransportResult } from './web/transport/WebTransport';
 
 export {
-    PriorityContext,
-    ReactPriorityContext
+    PriorityContext
 } from './PriorityContext';

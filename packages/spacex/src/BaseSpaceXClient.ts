@@ -12,19 +12,19 @@ import {
 } from './GraphqlEngine';
 import * as React from 'react';
 import { keyFromObject } from './utils/keyFromObject';
-import { PriorityContext, ReactPriorityContext } from './PriorityContext';
+import { PriorityContext } from './PriorityContext';
 
 export type SpaceQueryWatchParameters = QueryWatchParameters & { suspense?: boolean };
 
 export interface SpaceXClientParameters {
     engine: GraphqlEngine;
-    defaultPriority?: PriorityContext | null;
+    defaultPriority?: PriorityContext | number | null;
     globalCache?: QueryCache | null;
 }
 
 export class BaseSpaceXClient {
     readonly engine: GraphqlEngine;
-    readonly defaultPriority: PriorityContext | null | null;
+    readonly defaultPriority: PriorityContext | number | null;
     readonly globalCache: QueryCache;
 
     constructor(params: SpaceXClientParameters) {
@@ -126,10 +126,7 @@ export class BaseSpaceXClient {
 
     private getQueryWatch<TQuery, TVars>(cache: Map<String, GraphqlQueryWatch<{}>>, query: string, vars?: TVars, opts?: QueryWatchParameters): GraphqlQueryWatch<TQuery> {
         let defaultPriority: number | PriorityContext | undefined = undefined;
-        let priorityContext = React.useContext(ReactPriorityContext);
-        if (priorityContext) {
-            defaultPriority = priorityContext;
-        } else if (this.defaultPriority !== null) {
+        if (this.defaultPriority !== null) {
             defaultPriority = this.defaultPriority;
         }
         let shouldBeScoped = opts && opts.fetchPolicy && (opts.fetchPolicy === 'cache-and-network' || opts.fetchPolicy === 'network-only');
