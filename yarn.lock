@@ -1251,10 +1251,10 @@
     "@types/yargs" "^15.0.0"
     chalk "^3.0.0"
 
-"@openland/spacex-cli@1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@openland/spacex-cli/-/spacex-cli-1.0.1.tgz#a4c964fcfcd81c68bb10f615482fa8f9e26c94a8"
-  integrity sha512-N50PJfYc0h2AJ7E25LOR2kN+cfJkbJUmV0b3v01t3L5qgqj8+xf5pR6pPuo9lX/gHvgX/wIsLLySfykT+SdvFA==
+"@openland/spacex-cli@3.1.1":
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/@openland/spacex-cli/-/spacex-cli-3.1.1.tgz#1a187c68a8dcc646a9126edf7bd29e56bc992839"
+  integrity sha512-IUNOBqGqR5qD2S5/AbFw/d7RdmKTgVNSVKD5DTLtP89oGoao9rMT0Q8Q1QHb1UwkQ5z3kiKut5RNBcrYn7fM2Q==
 
 "@sinonjs/commons@^1.7.0":
   version "1.7.0"
