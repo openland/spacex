@@ -1,9 +1,14 @@
+import { WebEngineOpts } from './../WebEngine';
 import { PersistenceProvider } from './PersistenceProvider';
 import { PersistenceEmptyProvider } from './PersistenceEmptyProvider';
 import { RecordSet } from '../store/RecordStore';
 
 export class WebPersistence {
-    private readonly persistence: PersistenceProvider = new PersistenceEmptyProvider();
+    private readonly persistence: PersistenceProvider;
+
+    constructor(opts: WebEngineOpts) {
+        this.persistence = opts.persistence ? opts.persistence : new PersistenceEmptyProvider()
+    }
 
     async saveRecords(records: RecordSet): Promise<void> {
         await this.persistence.saveRecords(records);

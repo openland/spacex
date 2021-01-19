@@ -1,3 +1,4 @@
+import { WebEngineOpts } from './../WebEngine';
 import { WebPersistence } from '../persistence/WebPersistence';
 import { OperationDefinition } from '../types';
 import { RecordStore, RecordSet, Record } from './RecordStore';
@@ -11,7 +12,7 @@ export type QueryAndWatchArg = { type: 'updated' } | { type: 'missing' } | { typ
 
 export class WebStore {
     private readonly store = new RecordStore();
-    private readonly persistence = new WebPersistence();
+    private readonly persistence: WebPersistence;
 
     // Persistence Read
     private readonly requested = new Set<string>();
@@ -24,6 +25,10 @@ export class WebStore {
     // Subscriptions
     private nextSubscriptionId = 1;
     private subscriptions = new Map<number, { keys: Set<string>, callback: () => void }>();
+
+    constructor(opts: WebEngineOpts) {
+        this.persistence = new WebPersistence(opts);
+    }
 
     //
     // Merge to the store

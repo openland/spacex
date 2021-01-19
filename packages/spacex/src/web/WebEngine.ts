@@ -1,3 +1,4 @@
+import { PersistenceProvider } from './persistence/PersistenceProvider';
 import { GraphqlUnknownError, GraphqlError } from '../GraphqlError';
 import { Watcher } from '../utils/Watcher';
 import {
@@ -34,6 +35,7 @@ export interface WebEngineOpts {
     logging?: boolean;
     ws?: WebSocketEngine;
     transport?: TransportLayer;
+    persistence?: PersistenceProvider;
 }
 
 export class WebEngine implements GraphqlEngine {
@@ -42,11 +44,12 @@ export class WebEngine implements GraphqlEngine {
     get status(): GraphqlEngineStatus {
         return this.statusWatcher.getState()!!;
     }
-    private readonly store = new WebStore();
+    private readonly store: WebStore;
     private readonly transport: WebTransport;
     private readonly definitions: Definitions;
 
     constructor(definitions: Definitions, opts: WebEngineOpts) {
+        this.store = new WebStore(opts);
         this.transport = new WebTransport(opts);
         this.statusWatcher.setState({ status: 'connecting' });
         this.definitions = definitions;

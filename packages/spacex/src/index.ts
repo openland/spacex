@@ -32,7 +32,8 @@ export {
 } from './GraphqlError';
 
 export { RetryEngine } from './RetryEngine';
-export { WebEngine } from './web/WebEngine';
+export { WebEngine, WebEngineOpts } from './web/WebEngine';
+export { PersistenceProvider } from './web/persistence/PersistenceProvider';
 
 import * as WebDefinitionTypes from './web/types';
 export const WebDefinitions = WebDefinitionTypes;
