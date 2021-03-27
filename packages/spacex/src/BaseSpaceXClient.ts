@@ -1,4 +1,4 @@
-import { QueryCacheContext, QueryCache } from './QueryCache';
+import { QueryCacheContext, QueryCache, QueryCacheItem } from './QueryCache';
 import {
     QueryWatchParameters,
     GraphqlEngine,
@@ -106,7 +106,7 @@ export class BaseSpaceXClient {
         if (!clientCache && (opts && opts.fetchPolicy && (opts.fetchPolicy === 'cache-and-network' || opts.fetchPolicy === 'network-only'))) {
             throw Error('Unable to use cache-and-network or network-only fetch policy outside of cache context');
         }
-        const observableQuery = this.getQueryWatch<TQuery, TVars>((clientCache ? clientCache : this.globalCache).queries, query, vars, opts);
+        const observableQuery = this.getQueryWatch<TQuery, TVars>((clientCache ? clientCache : this.globalCache).cache, query, vars, opts);
 
         // Value Holder
         const [responseId, setResponseId] = React.useState(0);
@@ -124,7 +124,7 @@ export class BaseSpaceXClient {
         return [observableQuery, currentResult];
     }
 
-    private getQueryWatch<TQuery, TVars>(cache: Map<String, GraphqlQueryWatch<{}>>, query: string, vars?: TVars, opts?: QueryWatchParameters): GraphqlQueryWatch<TQuery> {
+    private getQueryWatch<TQuery, TVars>(cache: Map<String, QueryCacheItem>, query: string, vars?: TVars, opts?: QueryWatchParameters): GraphqlQueryWatch<TQuery> {
         let defaultPriority: number | PriorityContext | undefined = undefined;
         if (this.defaultPriority !== null) {
             defaultPriority = this.defaultPriority;
@@ -133,7 +133,7 @@ export class BaseSpaceXClient {
         let cacheKey = (opts && opts.fetchPolicy && opts.fetchPolicy) || 'cache-first';
         let q = cache;
         if (!shouldBeScoped) {
-            q = this.globalCache.queries;
+            q = this.globalCache.cache;
         }
         let key = query + '$' + keyFromObject(vars) + '$' + cacheKey;
         if (q.has(key)) {

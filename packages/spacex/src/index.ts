@@ -38,7 +38,7 @@ export { PersistenceProvider } from './web/persistence/PersistenceProvider';
 import * as WebDefinitionTypes from './web/types';
 export const WebDefinitions = WebDefinitionTypes;
 export { OperationDefinition, Definitions } from './web/types';
-export { QueryCacheProvider, QueryCache } from './QueryCache';
+export { QueryCacheProvider, QueryCache, QueryCacheItem } from './QueryCache';
 export { SpaceQueryWatchParameters, BaseSpaceXClient, SpaceXClientParameters } from './BaseSpaceXClient';
 export { TransportResult } from './web/transport/WebTransport';
 

@@ -2,15 +2,19 @@ import * as React from 'react';
 import { randomKey } from './utils/randomKey';
 import { GraphqlQueryWatch } from './GraphqlEngine';
 
+export interface QueryCacheItem {
+    destroy(): void;
+}
+
 export class QueryCache {
     readonly key: string = randomKey();
-    queries = new Map<String, GraphqlQueryWatch<{}>>();
+    cache = new Map<String, QueryCacheItem>();
 
     cleanup = () => {
-        for (let k of this.queries.keys()) {
-            this.queries.get(k)!.destroy();
+        for (let k of this.cache.keys()) {
+            this.cache.get(k)!.destroy();
         }
-        this.queries.clear();
+        this.cache.clear();
     }
 }
 
