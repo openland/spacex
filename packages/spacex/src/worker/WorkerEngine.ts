@@ -61,6 +61,13 @@ export class WorkerEngine extends GraphqlBridgedEngine {
         this.postMessage({ type: 'write', id, query: query, variables: vars, data });
     }
 
+    protected postReadFragment(id: string, key: string, fragment: string) {
+        this.postMessage({ type: 'fragment-read', id, key, fragment });
+    }
+    protected postWriteFragment(id: string, key: string, data: any, fragment: string) {
+        this.postMessage({ type: 'fragment-write', id, key, fragment, data });
+    }
+
     private handleMessage(msg: WorkerResponse) {
         if (msg.type === 'result') {
             this.operationUpdated(msg.id, msg.data);

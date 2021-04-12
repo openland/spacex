@@ -209,6 +209,20 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
         await res;
     }
 
+    async readFragment<TFragment>(fragment: string, key: string): Promise<TFragment | null> {
+        let id = this.nextKey();
+        let res = this.registerPromiseHandler<TFragment | null>(id);
+        this.postReadFragment(id, key, fragment);
+        return await res;
+    }
+
+    async writeFragment<TFragment>(fragment: string, key: string, data: TFragment) {
+        let id = this.nextKey();
+        let res = this.registerPromiseHandler<void>(id);
+        this.postWriteFragment(id, key, data, fragment);
+        await res;
+    }
+
     //
     // Implementation
     //
@@ -237,6 +251,9 @@ export abstract class GraphqlBridgedEngine implements GraphqlEngine {
 
     protected abstract postReadQuery<TVars>(id: string, query: string, vars?: TVars): void;
     protected abstract postWriteQuery<TVars>(id: string, data: any, query: string, vars?: TVars): void;
+
+    protected abstract postReadFragment(id: string, key: string, fragment: string): void;
+    protected abstract postWriteFragment(id: string, key: string, data: any, fragment: string): void;
 
     private nextKey() {
         return randomKey();

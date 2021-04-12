@@ -179,6 +179,12 @@ export interface OperationDefinition {
     selector: OutputTypeObject;
 }
 
+export interface FragmentDefinition {
+    name: string;
+    selector: OutputTypeObject;
+}
+
 export type Definitions = {
-    operations: { [key: string]: OperationDefinition }
+    operations: { [key: string]: OperationDefinition },
+    fragments: { [key: string]: FragmentDefinition }
 };

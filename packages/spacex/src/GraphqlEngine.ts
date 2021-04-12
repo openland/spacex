@@ -80,6 +80,9 @@ export interface GraphqlEngine {
     readQuery<TQuery, TVars>(query: string, vars?: TVars): Promise<TQuery | null>;
     writeQuery<TQuery, TVars>(data: TQuery, query: string, vars?: TVars): Promise<void>;
 
+    writeFragment<TFragment>(fragment: string, key: string, data: TFragment): Promise<void>;
+    readFragment<TFragment>(fragment: string, key: string): Promise<TFragment | null>;
+
     /* Close GraphQL Engine */
     close(): void;
 }

@@ -19,7 +19,10 @@ export type WorkerRequest = {
         { type: 'subscribe-destroy' } |
 
         { type: 'read', query: string, variables: any } |
-        { type: 'write', query: string, variables: any, data: any }
+        { type: 'write', query: string, variables: any, data: any } |
+
+        { type: 'fragment-read', fragment: string, key: string } |
+        { type: 'fragment-write', fragment: string, key: string, data: any }
     );
 
 export type WorkerResponseType = 'result' | 'error';

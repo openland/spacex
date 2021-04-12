@@ -1,3 +1,4 @@
+import { FragmentDefinition } from './../types';
 import { WebEngineOpts } from './../WebEngine';
 import { WebPersistence } from '../persistence/WebPersistence';
 import { OperationDefinition } from '../types';
@@ -130,6 +131,25 @@ export class WebStore {
     }
 
     //
+    // Fragments
+    //
+
+    readFragment = async (fragment: FragmentDefinition, id: string) => {
+        await this.prepareFragmentRead(fragment, id);
+        let root = readRootFromStore(id, this.store, fragment.selector, {});
+        if (root.result) {
+            return { result: true, value: root.value! };
+        } else {
+            return { result: false };
+        }
+    }
+
+    mergeFragment = async (fragment: FragmentDefinition, key: string, data: any) => {
+        let normalized = normalizeResponse(key, fragment.selector, {}, data);
+        await this.merge(normalized);
+    }
+
+    //
     // Read from Persistence
     //
 
@@ -142,6 +162,14 @@ export class WebStore {
         }
         if (missingIds.size > 0) {
             await this.persistenceRead(missingIds);
+        }
+    }
+
+    private readonly prepareFragmentRead = async (fragment: FragmentDefinition, id: string) => {
+        let missing = collectMissingKeysRoot(id, this.store, fragment.selector, {});
+        if (missing.size > 0) {
+            await this.persistenceRead(missing);
+            await this.prepareFragmentRead(fragment, id);
         }
     }
 

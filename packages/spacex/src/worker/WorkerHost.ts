@@ -50,6 +50,18 @@ export class WorkerHost {
             }).catch((v) => {
                 this.postError(msg.id, v);
             });
+        } else if (msg.type === 'fragment-read') {
+            this.engine.readFragment(msg.fragment, msg.key).then((v) => {
+                this.postResult(msg.id, v);
+            }).catch((v) => {
+                this.postError(msg.id, v);
+            });
+        } else if (msg.type === 'fragment-write') {
+            this.engine.writeFragment(msg.fragment, msg.key, msg.data).then((v) => {
+                this.postResult(msg.id, v);
+            }).catch((v) => {
+                this.postError(msg.id, v);
+            });
         } else if (msg.type === 'watch') {
             let id = msg.id;
             let watch = this.engine.queryWatch(msg.query, msg.variables, msg.params);

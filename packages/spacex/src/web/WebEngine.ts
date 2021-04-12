@@ -364,4 +364,17 @@ export class WebEngine implements GraphqlEngine {
     async writeQuery<TQuery, TVars>(data: TQuery, query: string, vars?: TVars): Promise<void> {
         await this.store.mergeResponse(this.definitions.operations[query], vars, data);
     }
+
+    async readFragment<TFragment>(fragment: string, key: string): Promise<TFragment | null> {
+        let r = await this.store.readFragment(this.definitions.fragments[fragment], key);
+        if (r.result) {
+            return r.value! as TFragment;
+        } else {
+            return null;
+        }
+    }
+
+    async writeFragment<TFragment>(fragment: string, key: string, data: TFragment): Promise<void> {
+        await this.store.mergeFragment(this.definitions.fragments[fragment], key, data);
+    }
 }
