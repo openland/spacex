@@ -7,6 +7,7 @@ import { astToString } from './utils/astToString';
 import { compileDescriptor } from './compileDescriptor';
 import { compileTypes } from './compileTypes';
 import { compileClient } from './compileClient';
+import ora from 'ora';
 
 export type CompileContext = {
     schema: GraphQLSchema,
@@ -18,6 +19,8 @@ export type CompileContext = {
 }
 
 export async function compile(path: string, schemaPath: string, output: string, name: string) {
+    const loading = ora();
+    loading.start('Loading schema');
 
     // Load schema
     const schema = buildClientSchema(JSON.parse(fs.readFileSync(schemaPath, 'utf-8')));
@@ -25,6 +28,9 @@ export async function compile(path: string, schemaPath: string, output: string, 
     // Load queries
     const files = glob.sync(path).map((f) => fs.readFileSync(f, 'utf-8'));
     const documents = files.map((f) => parse(f));
+
+    // Optimizing
+    loading.start('Optimizing queries');
 
     // Add __typename
     const withTypenames = documents.map((d) => withTypenameFieldAddedWhereNeeded(d));
@@ -123,13 +129,18 @@ export async function compile(path: string, schemaPath: string, output: string, 
     };
 
     // Compile execution descriptor
+    loading.start('Generating descriptor');
     const descriptor = compileDescriptor(context);
     fs.writeFileSync(output + '/spacex.descriptor.json', descriptor, 'utf-8');
 
     // Compile types
+    loading.start('Generating types');
     await compileTypes(output + '/spacex.types.ts', context);
 
     // Compile client
+    loading.start('Generating client');
     const client = compileClient(name, context);
     fs.writeFileSync(output + '/spacex.ts', client, 'utf-8');
+
+    loading.succeed('Completed');
 }
