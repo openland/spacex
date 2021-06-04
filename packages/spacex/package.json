@@ -1,13 +1,13 @@
 {
   "name": "@openland/spacex",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "peerDependencies": {
     "react": "*"
   },
   "dependencies": {
-    "@openland/spacex-cli": "^4.0.1",
+    "@openland/spacex-cli": "^4.0.2",
     "isomorphic-ws": "4.0.1",
     "uuid": "3.4.0",
     "ws": "7.2.1"
