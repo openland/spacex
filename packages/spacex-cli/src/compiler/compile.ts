@@ -6,6 +6,7 @@ import { withTypenameFieldAddedWhereNeeded } from './utils/withTypenameFieldAdde
 import { astToString } from './utils/astToString';
 import { compileDescriptor } from './compileDescriptor';
 import { compileTypes } from './compileTypes';
+import { compileClient } from './compileClient';
 
 export type CompileContext = {
     schema: GraphQLSchema,
@@ -126,5 +127,9 @@ export async function compile(path: string, schemaPath: string, output: string, 
     fs.writeFileSync(output + '/spacex.descriptor.json', descriptor, 'utf-8');
 
     // Compile types
-    await compileTypes(output, context);
+    await compileTypes(output + '/spacex.types.ts', context);
+
+    // Compile client
+    const client = compileClient(name, context);
+    fs.writeFileSync(output + '/spacex.ts', client, 'utf-8');
 }

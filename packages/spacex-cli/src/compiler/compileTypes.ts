@@ -10,5 +10,5 @@ export async function compileTypes(output: string, context: CompileContext) {
         }
     }
     const document: DocumentNode = { kind: 'Document', definitions };
-    Apollo(document, context.schema as any, output + '/spacex.type.ts', undefined, 'typescript', '', false, { useFlowExactObjects: false });
+    Apollo(document, context.schema as any, output, undefined, 'typescript', '', false, { useFlowExactObjects: false });
 }
