@@ -11,16 +11,24 @@ import { jsonStringifyMinimized } from './utils/jsonStringifyMinimized';
 
 export function compileDescriptor(context: CompileContext) {
 
+    // export interface OperationDefinition {
+    //     name: string;
+    //     body: string;
+    //     kind: 'query' | 'mutation' | 'subscription';
+    //     selector: OutputTypeObject;
+    // }
+
+    // export interface FragmentDefinition {
+    //     name: string;
+    //     selector: OutputTypeObject;
+    // }
+
     const result: {
-        fragments: { [name: string]: OutputTypeObject },
-        queries: { [name: string]: OutputTypeObject },
-        mutations: { [name: string]: OutputTypeObject },
-        subscriptions: { [name: string]: OutputTypeObject }
+        fragments: { [name: string]: { name: string, selector: OutputTypeObject } },
+        operations: { [name: string]: { name: string, kind: 'query' | 'mutation' | 'subscription', selector: OutputTypeObject } }
     } = {
         fragments: {},
-        mutations: {},
-        subscriptions: {},
-        queries: {}
+        operations: {}
     };
 
     // Collect Enums
@@ -124,19 +132,19 @@ export function compileDescriptor(context: CompileContext) {
     // Generate Descriptor
     for (let [name, fragment] of context.fragments.entries()) {
         const r = generateSelectionSet(fragment.definition.typeCondition.name.value, fragment.definition.selectionSet);
-        result.fragments[name] = r;
+        result.fragments[name] = { name, selector: r };
     }
     for (let [name, query] of context.queries.entries()) {
         const r = generateSelectionSet('Query', query.definition.selectionSet);
-        result.queries[name] = r;
+        result.operations[name] = { name, kind: 'query', selector: r };
     }
     for (let [name, mutation] of context.mutations.entries()) {
         const r = generateSelectionSet('Mutation', mutation.definition.selectionSet);
-        result.mutations[name] = r;
+        result.operations[name] = { name, kind: 'mutation', selector: r };
     }
     for (let [name, subscription] of context.subscriptions.entries()) {
         const r = generateSelectionSet('Subscription', subscription.definition.selectionSet);
-        result.subscriptions[name] = r;
+        result.operations[name] = { name, kind: 'subscription', selector: r };
     }
 
     // Generate JSON
