@@ -16,12 +16,25 @@ program.command('compile')
     .option('-s, --schema [schema]', 'GraphQL JSON schema')
     .option('-o, --output <output>', 'GraphQL output directory')
     .option('-n, --name <name>', 'Optional client name')
+    .option('--optimize-inline', 'Inline all fragments. Default: false.', false)
+    .option('--optimize-flatten', 'Flatten queries. Default: true', true)
     .action(async (options) => {
         const resolved = options.path as string;
         const schema = options.schema as string;
         const output = options.output as string || '.';
         const name = options.name || 'SpaceXClient';
-        await compile(resolved, schema, output, name);
+        const optimizeInline = options.optimizeInline as boolean;
+        const optimizeFlatten = options.optimizeInline as boolean;
+
+        await compile({
+            path: resolved,
+            schemaPath: schema,
+            output,
+            name,
+            enableFlattenTransform: optimizeFlatten,
+            enableInlineFragment: optimizeInline,
+            enableSkipRedundant: true
+        });
     });
 
 // Start
