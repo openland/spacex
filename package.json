@@ -1,30 +1,45 @@
 {
-  "name": "spacex-monorepo",
-  "version": "1.0.0",
   "private": true,
-  "scripts": {
-    "dev": "journey dev sample",
-    "build": "journey build",
-    "clean": "journey clean",
-    "test": "yarn jest",
-    "release": "yarn build && yarn jest && cd ./packages/spacex && yarn publish",
-    "export": "journey export sample"
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
   },
-  "devDependencies": {
-    "@haystackjs/journey": "2.2.1",
-    "@types/jest": "^25.2.1",
-    "@types/react": "^16.9.19",
-    "@types/react-dom": "^16.9.5",
-    "@types/uuid": "^3.4.7",
-    "react": "^16.12.0",
-    "react-dom": "^16.12.0",
-    "ts-jest": "^25.4.0"
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "yarn tsc --build --clean",
+    "test": "yarn jest",
+    "release": "yarn clean && yarn build && yarn test && yarn lerna publish --force-publish",
+    "cli": "yarn tsc --build --incremental=false && node ./packages/spacex-cli/lib/index.js",
+    "cli:test": "yarn cli compile --path \"./packages/spacex-cli/test_data/queries/*.graphql\" --schema ./packages/spacex-cli/test_data/schema.json --output ./packages/spacex-cli/test_data"
   },
   "dependencies": {
-    "@openland/spacex-cli": "3.1.1",
-    "@types/ws": "^7.2.1",
+    "@graphql-tools/optimize": "1.0.1",
+    "@graphql-tools/relay-operation-optimizer": "^6.3.0",
+    "@types/commander": "2.12.2",
+    "@types/glob": "7.1.3",
+    "@types/graphql": "14.5.0",
+    "@types/jest": "25.2.1",
+    "@types/ora": "3.2.0",
+    "@types/prompts": "2.0.12",
+    "@types/react": "16.9.19",
+    "@types/react-dom": "16.9.5",
+    "@types/uuid": "3.4.7",
+    "@types/ws": "7.2.1",
+    "apollo": "2.33.4",
+    "commander": "7.2.0",
+    "glob": "7.1.7",
+    "graphql": "15.5.0",
     "isomorphic-ws": "4.0.1",
-    "jest": "^25.5.0",
+    "jest": "25.5.0",
+    "ora": "5.4.0",
+    "prompts": "2.4.1",
+    "react": "16.12.0",
+    "react-dom": "16.12.0",
+    "ts-jest": "25.4.0",
     "typescript": "*",
     "uuid": "3.4.0",
     "ws": "7.2.1"

@@ -243,6 +243,12 @@ export class RetryEngine implements GraphqlEngine {
     writeQuery<TQuery, TVars>(data: TQuery, query: string, vars?: TVars) {
         return this.inner.writeQuery<TQuery, TVars>(data, query, vars);
     }
+    writeFragment<TFragment>(fragment: string, key: string, data: TFragment): Promise<void> {
+        return this.inner.writeFragment(fragment, key, data);
+    }
+    readFragment<TFragment>(fragment: string, key: string): Promise<TFragment | null> {
+        return this.inner.readFragment(fragment, key);
+    }
 
     close() {
         this.inner.close();

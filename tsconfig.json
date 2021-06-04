@@ -1,22 +1,23 @@
 {
-    "extends": "journey-tsconfig/journey-tsconfig.json",
     "compilerOptions": {
-        "target": "es5",
-        "downlevelIteration": true,
-        "baseUrl": "packages",
-        "outDir": "./output",
-        "paths": {
-            "sample": [
-                "sample/src"
-            ],
-            "spacex": [
-                "spacex/src"
-            ]
-        }
+        "target": "esnext",
+        "module": "commonjs",
+        "lib": [
+            "es6",
+            "dom"
+        ],
+        "jsx": "react",
+        "experimentalDecorators": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true
     },
-    "exclude": [
-        "node_modules/**/*",
-        "**/*.spec.ts",
-        "output"
+    "files": [],
+    "references": [
+        {
+            "path": "./packages/spacex"
+        },
+        {
+            "path": "./packages/spacex-cli"
+        },
     ]
 }

@@ -1,4 +1,4 @@
 node_modules
 output
-packages/sample/lib
+packages/spacex-cli/lib
 packages/spacex/lib

@@ -1,0 +1,65 @@
+type DiscoveredThing {
+    id: ID!
+    name: String!
+    host: String!
+    port: Int!
+}
+
+type User {
+    id: ID!
+    username: String!
+}
+
+interface Device {
+    id: ID!
+    description: String
+    addedBy: User!
+}
+
+type Lamp implements Device {
+    id: ID!
+    description: String
+    addedBy: User!
+    brightness: Float!
+    minBrightness: Float!
+    maxBrightness: Float!
+}
+
+type Switch implements Device {
+    id: ID!
+    description: String
+    addedBy: User!
+    numberOfButtons: Int
+}
+
+type Lock implements Device {
+    id: ID!
+    description: String
+    addedBy: User!
+    locked: Boolean!
+}
+
+enum DeviceKind {
+    LAMP, SWITCH, UNKNOWN
+}
+
+input ImageRef {
+    url: String!
+}
+
+input DeviceDescription {
+    name: String
+    description: String
+    icon: ImageRef
+}
+
+type Query {
+    discover: [DiscoveredThing!]!
+    users: [User!]!
+    allDevices: [Device!]!
+}
+
+type Mutation {
+    addUser(username: String!, password: String!): User!
+    updateDeviceDescription(id: ID!, description: DeviceDescription!): Device!
+}
