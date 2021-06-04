@@ -25,7 +25,7 @@ export function compileDescriptor(context: CompileContext) {
 
     const result: {
         fragments: { [name: string]: { name: string, selector: OutputTypeObject } },
-        operations: { [name: string]: { name: string, kind: 'query' | 'mutation' | 'subscription', selector: OutputTypeObject } }
+        operations: { [name: string]: { name: string, kind: 'query' | 'mutation' | 'subscription', body: string, selector: OutputTypeObject } }
     } = {
         fragments: {},
         operations: {}
@@ -136,15 +136,15 @@ export function compileDescriptor(context: CompileContext) {
     }
     for (let [name, query] of context.queries.entries()) {
         const r = generateSelectionSet('Query', query.definition.selectionSet);
-        result.operations[name] = { name, kind: 'query', selector: r };
+        result.operations[name] = { name, kind: 'query', selector: r, body: query.source };
     }
     for (let [name, mutation] of context.mutations.entries()) {
         const r = generateSelectionSet('Mutation', mutation.definition.selectionSet);
-        result.operations[name] = { name, kind: 'mutation', selector: r };
+        result.operations[name] = { name, kind: 'mutation', selector: r, body: mutation.source };
     }
     for (let [name, subscription] of context.subscriptions.entries()) {
         const r = generateSelectionSet('Subscription', subscription.definition.selectionSet);
-        result.operations[name] = { name, kind: 'subscription', selector: r };
+        result.operations[name] = { name, kind: 'subscription', selector: r, body: subscription.source };
     }
 
     // Generate JSON
