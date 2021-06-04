@@ -77,7 +77,7 @@ export function compileClient(clientName: string, context: CompileContext) {
     // mutate*
     for (let [name, mutation] of context.mutations.entries()) {
         if (mutation.definition.variableDefinitions && mutation.definition.variableDefinitions.length > 0) {
-            output.append(`    mutate${name}(variables: Types.${name}, params?: MutationParameters): Promise<Types.${name}> {`);
+            output.append(`    mutate${name}(variables: Types.${name}Variables, params?: MutationParameters): Promise<Types.${name}> {`);
             output.append(`        return this.mutate('${name}', variables, params)`);
             output.append(`    }`);
         } else {

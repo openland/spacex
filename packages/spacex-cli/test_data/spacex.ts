@@ -24,10 +24,10 @@ export class SpaceXClient extends BaseSpaceXClient {
     useDiscoverDevices(params?: SpaceQueryWatchParameters): Types.DiscoverDevices | null {;
         return this.useQuery('DiscoverDevices', undefined, params);
     }
-    mutateUpdateDeviceDescription(variables: Types.UpdateDeviceDescription, params?: MutationParameters): Promise<Types.UpdateDeviceDescription> {
+    mutateUpdateDeviceDescription(variables: Types.UpdateDeviceDescriptionVariables, params?: MutationParameters): Promise<Types.UpdateDeviceDescription> {
         return this.mutate('UpdateDeviceDescription', variables, params)
     }
-    mutateAddUser(variables: Types.AddUser, params?: MutationParameters): Promise<Types.AddUser> {
+    mutateAddUser(variables: Types.AddUserVariables, params?: MutationParameters): Promise<Types.AddUser> {
         return this.mutate('AddUser', variables, params)
     }
 }
