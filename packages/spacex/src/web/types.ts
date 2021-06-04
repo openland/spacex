@@ -79,8 +79,7 @@ export type SelectorField = {
 
 export type SelectorFragment = {
     type: 'fragment',
-    name: string,
-    fragmentType: OutputTypeObject
+    name: string
 };
 
 export type SelectorTypeCondition = {
@@ -119,8 +118,8 @@ export function inline(name: string, inner: OutputTypeObject): SelectorTypeCondi
     return { type: 'type-condition', name, fragmentType: inner };
 }
 
-export function fragment(name: string, inner: OutputTypeObject): SelectorFragment {
-    return { type: 'fragment', name, fragmentType: inner };
+export function fragment(name: string): SelectorFragment {
+    return { type: 'fragment', name };
 }
 
 export function args(...fieldArgs: { name: string, value: InputValue }[]): { [key: string]: InputValue } {
@@ -162,6 +161,10 @@ export function boolValue(value: boolean): InputValueBoolean {
 
 export function listValue(...items: InputValue[]): InputValueList {
     return { type: 'list', items };
+}
+
+export function nullValue(): InputValueNull {
+    return { type: 'null' };
 }
 
 export function objectValue(...fields: { name: string, value: InputValue }[]): InputValueObject {

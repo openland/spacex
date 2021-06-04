@@ -1,11 +1,11 @@
-import { Selector, OutputType } from './../types';
+import { Selector, OutputType, FragmentDefinition } from './../types';
 import { OutputTypeObject } from '../types';
 import { RecordValue, RecordSet, RecordValueReference } from './RecordStore';
 import { selectorKey } from './selectorKey';
 
 type RecordCollection = { [key: string]: { [key: string]: RecordValue } };
 
-type NormalizeCtx = { collection: RecordCollection, queryArguments: any, root: any };
+type NormalizeCtx = { collection: RecordCollection, queryArguments: any, root: any, fragments: { [key: string]: FragmentDefinition } };
 
 function buildSet(collection: RecordCollection): RecordSet {
     let keys = Object.keys(collection);
@@ -105,7 +105,7 @@ function normalizeSelector(parentCacheKey: string | null, selectors: Selector[],
                 normalizeSelector(parentCacheKey, f.fragmentType.selectors, data, ctx);
             }
         } else if (f.type === 'fragment') {
-            normalizeSelector(parentCacheKey, f.fragmentType.selectors, data, ctx);
+            normalizeSelector(parentCacheKey, ctx.fragments[f.name].selector.selectors, data, ctx);
         } else {
             throw Error('Unreachable code');
         }
@@ -142,14 +142,14 @@ function normalizeRootSelector(rootCacheKey: string | null, selectors: Selector[
     }
 }
 
-export function normalizeData(id: string, type: OutputTypeObject, queryArguments: any, data: any): RecordSet {
+export function normalizeData(id: string, type: OutputTypeObject, queryArguments: any, data: any, fragments: { [key: string]: FragmentDefinition }): RecordSet {
     let collection: RecordCollection = {};
-    normalizeSelector(id, type.selectors, data, { collection, root: data, queryArguments });
+    normalizeSelector(id, type.selectors, data, { collection, root: data, queryArguments, fragments });
     return buildSet(collection);
 }
 
-export function normalizeResponse(rootCacheKey: string | null, type: OutputTypeObject, queryArguments: any, data: any): RecordSet {
+export function normalizeResponse(rootCacheKey: string | null, type: OutputTypeObject, queryArguments: any, data: any, fragments: { [key: string]: FragmentDefinition }): RecordSet {
     let collection: RecordCollection = {};
-    normalizeRootSelector(rootCacheKey, type.selectors, data, { collection, root: data, queryArguments });
+    normalizeRootSelector(rootCacheKey, type.selectors, data, { collection, root: data, queryArguments, fragments });
     return buildSet(collection);
 }

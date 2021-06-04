@@ -1,4 +1,4 @@
-import { FragmentDefinition } from './../types';
+import { Definitions, FragmentDefinition } from './../types';
 import { WebEngineOpts } from './../WebEngine';
 import { WebPersistence } from '../persistence/WebPersistence';
 import { OperationDefinition } from '../types';
@@ -27,8 +27,12 @@ export class WebStore {
     private nextSubscriptionId = 1;
     private subscriptions = new Map<number, { keys: Set<string>, callback: () => void }>();
 
+    // Definitions
+    private readonly definitions: Definitions;
+
     constructor(opts: WebEngineOpts) {
         this.persistence = new WebPersistence(opts);
+        this.definitions = opts.definitions;
     }
 
     //
@@ -37,7 +41,7 @@ export class WebStore {
 
     mergeResponse = async (operation: OperationDefinition, variables: any, data: any) => {
         let rootCacheKey = operation.kind === 'query' ? ROOT_QUERY : null;
-        let normalized = normalizeResponse(rootCacheKey, operation.selector, variables, data);
+        let normalized = normalizeResponse(rootCacheKey, operation.selector, variables, data, this.definitions.fragments);
         await this.merge(normalized);
     }
 
@@ -86,7 +90,7 @@ export class WebStore {
     readQuery = async (operation: OperationDefinition, variables: any) => {
         await this.prepareRead(operation, variables);
 
-        let root = readRootFromStore(ROOT_QUERY, this.store, operation.selector, variables);
+        let root = readRootFromStore(ROOT_QUERY, this.store, operation.selector, variables, this.definitions.fragments);
 
         if (root.result) {
             return { result: true, value: root.value! };
@@ -99,7 +103,7 @@ export class WebStore {
         (async () => {
             await this.prepareRead(operation, variables);
 
-            let root = readRootFromStore(ROOT_QUERY, this.store, operation.selector, variables);
+            let root = readRootFromStore(ROOT_QUERY, this.store, operation.selector, variables, this.definitions.fragments);
 
             if (!root.result) {
                 callback({ type: 'missing' });
@@ -108,7 +112,7 @@ export class WebStore {
 
             // Calculate keys
             // TODO: Optimize
-            let normalized = normalizeResponse(ROOT_QUERY, operation.selector, variables, root.value!);
+            let normalized = normalizeResponse(ROOT_QUERY, operation.selector, variables, root.value!, this.definitions.fragments);
             let keys = new Set<string>();
             for (let r of Object.keys(normalized)) {
                 for (let f of Object.keys(normalized[r].fields)) {
@@ -136,7 +140,7 @@ export class WebStore {
 
     readFragment = async (fragment: FragmentDefinition, id: string) => {
         await this.prepareFragmentRead(fragment, id);
-        let root = readRootFromStore(id, this.store, fragment.selector, {});
+        let root = readRootFromStore(id, this.store, fragment.selector, {}, this.definitions.fragments);
         if (root.result) {
             return { result: true, value: root.value! };
         } else {
@@ -145,7 +149,7 @@ export class WebStore {
     }
 
     mergeFragment = async (fragment: FragmentDefinition, key: string, data: any) => {
-        let normalized = normalizeResponse(key, fragment.selector, {}, data);
+        let normalized = normalizeResponse(key, fragment.selector, {}, data, this.definitions.fragments);
         await this.merge(normalized);
     }
 
@@ -166,7 +170,7 @@ export class WebStore {
     }
 
     private readonly prepareFragmentRead = async (fragment: FragmentDefinition, id: string) => {
-        let missing = collectMissingKeysRoot(id, this.store, fragment.selector, {});
+        let missing = collectMissingKeysRoot(id, this.store, fragment.selector, {}, this.definitions.fragments);
         if (missing.size > 0) {
             await this.persistenceRead(missing);
             await this.prepareFragmentRead(fragment, id);
@@ -174,7 +178,7 @@ export class WebStore {
     }
 
     private readonly prepareRead = async (operation: OperationDefinition, variables: any) => {
-        let missing = collectMissingKeysRoot(ROOT_QUERY, this.store, operation.selector, variables);
+        let missing = collectMissingKeysRoot(ROOT_QUERY, this.store, operation.selector, variables, this.definitions.fragments);
         if (missing.size > 0) {
             await this.persistenceRead(missing);
             await this.prepareRead(operation, variables);

@@ -1,6 +1,6 @@
-import {Record, RecordStore} from "./RecordStore";
-import {collectMissingKeysRoot} from "./collectMissingKeys";
-import {Selector, OutputTypeObject, OutputType, InputValue, obj, field, scalar, inline} from "../types";
+import { Record, RecordStore } from "./RecordStore";
+import { collectMissingKeysRoot } from "./collectMissingKeys";
+import { Selector, OutputTypeObject, OutputType, InputValue, obj, field, scalar, inline } from "../types";
 
 describe('collectMissingKeys', () => {
     it('should collect missing keys from condition types', () => {
@@ -22,7 +22,7 @@ describe('collectMissingKeys', () => {
             ))
         )
 
-        const getMissingKeys = (query: OutputTypeObject) => collectMissingKeysRoot('root', store, query, { })
+        const getMissingKeys = (query: OutputTypeObject) => collectMissingKeysRoot('root', store, query, {}, {})
 
         expect(getMissingKeys(outputType).has('root.$ref.chat')).toBe(true);
 

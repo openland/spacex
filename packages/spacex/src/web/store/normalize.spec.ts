@@ -14,7 +14,7 @@ describe('normalize', () => {
             '{"field1_alias":"1","field2_alias":"2"}'
         ];
         for (let c of cases) {
-            let normalized = normalizeData('1', type, {}, JSON.parse(c));
+            let normalized = normalizeData('1', type, {}, JSON.parse(c), {});
             expect(Object.keys(normalized).length).toBe(1);
             expect(normalized['1']).not.toBeFalsy();
 
@@ -38,7 +38,7 @@ describe('normalize', () => {
             field("field3", "field3_alias", {}, scalar("String"))
         );
         let floatCase = '{"field1_alias":1.0,"field2_alias":2.0}';
-        let normalized = normalizeData('1', type, {}, JSON.parse(floatCase));
+        let normalized = normalizeData('1', type, {}, JSON.parse(floatCase), {});
 
         expect(Object.keys(normalized).length).toBe(1);
         expect(normalized['1']).not.toBeFalsy();
@@ -62,7 +62,7 @@ describe('normalize', () => {
             field("field3", "field3_alias", {}, scalar("String"))
         );
         let floatCase = '{"field1_alias":1,"field2_alias":2}';
-        let normalized = normalizeData('1', type, {}, JSON.parse(floatCase));
+        let normalized = normalizeData('1', type, {}, JSON.parse(floatCase), {});
 
         expect(Object.keys(normalized).length).toBe(1);
         expect(normalized['1']).not.toBeFalsy();
@@ -86,7 +86,7 @@ describe('normalize', () => {
             field("field3", "field3_alias", {}, scalar("String"))
         );
         let floatCase = '{"field1_alias":true,"field2_alias":false}';
-        let normalized = normalizeData('1', type, {}, JSON.parse(floatCase));
+        let normalized = normalizeData('1', type, {}, JSON.parse(floatCase), {});
 
         expect(Object.keys(normalized).length).toBe(1);
         expect(normalized['1']).not.toBeFalsy();
@@ -112,7 +112,7 @@ describe('normalize', () => {
             field("field4", "field4_alias", {}, scalar("Boolean"))
         );
         let floatCase = '{"field1_alias":true,"field2_alias":false,"field3_alias":null}';
-        let normalized = normalizeData('1', type, {}, JSON.parse(floatCase));
+        let normalized = normalizeData('1', type, {}, JSON.parse(floatCase), {});
 
         expect(Object.keys(normalized).length).toBe(1);
         expect(normalized['1']).not.toBeFalsy();
@@ -139,7 +139,7 @@ describe('normalize', () => {
             field("field4", "field4_alias", {}, scalar("Int"))
         );
         let floatCase = '{"field1_alias":1,"field2_alias":2,"field3_alias":null}';
-        let normalized = normalizeData('1', type, {}, JSON.parse(floatCase));
+        let normalized = normalizeData('1', type, {}, JSON.parse(floatCase), {});
 
         expect(Object.keys(normalized).length).toBe(1);
         expect(normalized['1']).not.toBeFalsy();
@@ -167,7 +167,7 @@ describe('normalize', () => {
             field("field4", "field4_alias", {}, scalar("Float"))
         );
         let floatCase = '{"field1_alias":1,"field2_alias":2,"field3_alias":null}';
-        let normalized = normalizeData('1', type, {}, JSON.parse(floatCase));
+        let normalized = normalizeData('1', type, {}, JSON.parse(floatCase), {});
 
         expect(Object.keys(normalized).length).toBe(1);
         expect(normalized['1']).not.toBeFalsy();
@@ -195,7 +195,7 @@ describe('normalize', () => {
             field("field4", "field4_alias", {}, scalar("ID"))
         );
         let floatCase = '{"field1_alias":1,"field2_alias":"2","field3_alias":null}';
-        let normalized = normalizeData('1', type, {}, JSON.parse(floatCase));
+        let normalized = normalizeData('1', type, {}, JSON.parse(floatCase), {});
 
         expect(Object.keys(normalized).length).toBe(1);
         expect(normalized['1']).not.toBeFalsy();
@@ -223,7 +223,7 @@ describe('normalize', () => {
             field("field4", "field4_alias", {}, scalar("Date"))
         );
         let floatCase = '{"field1_alias":1,"field2_alias":"2","field3_alias":null}';
-        let normalized = normalizeData('1', type, {}, JSON.parse(floatCase));
+        let normalized = normalizeData('1', type, {}, JSON.parse(floatCase), {});
 
         expect(Object.keys(normalized).length).toBe(1);
         expect(normalized['1']).not.toBeFalsy();
@@ -250,7 +250,7 @@ describe('normalize', () => {
             field("field4", "field4_alias", {}, scalar("DateTime"))
         );
         let cs = '{"field1_alias":1,"field2_alias":"2","field3_alias":null}';
-        expect(() => normalizeData("1", type, {}, JSON.parse(cs))).toThrowError();
+        expect(() => normalizeData("1", type, {}, JSON.parse(cs), {})).toThrowError();
     });
     it('should crash on missing non-nullable value', () => {
         let type = obj(
@@ -260,7 +260,7 @@ describe('normalize', () => {
             field("field4", "field4_alias", {}, scalar("String"))
         );
         let cs = '{"field1_alias":1,"field2_alias":null,"field3_alias":null}';
-        expect(() => normalizeData("1", type, {}, JSON.parse(cs))).toThrowError();
+        expect(() => normalizeData("1", type, {}, JSON.parse(cs), {})).toThrowError();
     });
     it('should detect correct ids', () => {
         let type = obj(
@@ -269,7 +269,7 @@ describe('normalize', () => {
         );
         let cases = ['{"id":"1","value":null}', '{"id":1,"value":null}'];
         for (let cs of cases) {
-            let normalized = normalizeData("some-parent-id", type, {}, JSON.parse(cs));
+            let normalized = normalizeData("some-parent-id", type, {}, JSON.parse(cs), {});
             expect(Object.keys(normalized).length).toBe(1);
             expect(normalized['1']).not.toBeFalsy();
         }
@@ -278,9 +278,7 @@ describe('normalize', () => {
         let type = obj(
             field("id", "id", {}, scalar("ID")),
             field("value", "value", {}, scalar("String")),
-            fragment("SomeValue", obj(
-                field("value2", "value2", {}, scalar("String"))
-            ))
+            fragment("SomeValue")
         );
 
         let cases = [
@@ -290,7 +288,14 @@ describe('normalize', () => {
             '{"__typename": "SomeValue", "id":1,"value":null,"value2":"2"}'
         ];
         for (let cs of cases) {
-            let normalized = normalizeData("some-parent-id", type, {}, JSON.parse(cs));
+            let normalized = normalizeData("some-parent-id", type, {}, JSON.parse(cs), {
+                SomeValue: {
+                    name: 'SomeValue',
+                    selector: obj(
+                        field("value2", "value2", {}, scalar("String"))
+                    )
+                }
+            });
             expect(Object.keys(normalized).length).toBe(1);
             expect(normalized['1']).not.toBeFalsy();
             expect(Object.keys(normalized['1'].fields).length).toBe(3);
@@ -307,13 +312,13 @@ describe('normalize', () => {
         let cases = ['{"__typename":"SomeType","id":"1","value":null,"value2":"2"}', '{"__typename":"SomeType","id":1,"value":null,"value2":"2"}'];
         let negativeCases = ['{"__typename":"SomeType2","id":"1","value":null,"value2":"2"}', '{"__typename":"SomeType2","id":1,"value":null,"value2":"2"}'];
         for (let cs of cases) {
-            let normalized = normalizeData('some-parent-id', type, {}, JSON.parse(cs));
+            let normalized = normalizeData('some-parent-id', type, {}, JSON.parse(cs), {});
             expect(Object.keys(normalized).length).toBe(1);
             expect(normalized['1']).not.toBeFalsy();
             expect(Object.keys(normalized['1'].fields).length).toBe(3);
         }
         for (let cs of negativeCases) {
-            let normalized = normalizeData('some-parent-id', type, {}, JSON.parse(cs));
+            let normalized = normalizeData('some-parent-id', type, {}, JSON.parse(cs), {});
             expect(Object.keys(normalized).length).toBe(1);
             expect(normalized['1']).not.toBeFalsy();
             expect(Object.keys(normalized['1'].fields).length).toBe(2);
@@ -324,7 +329,7 @@ describe('normalize', () => {
             field("list", "list", {}, list(list(scalar("String"))))
         );
         let cs = '{"list":[["1",null,"3"]]}';
-        let normalized = normalizeData('1', type, {}, JSON.parse(cs));
+        let normalized = normalizeData('1', type, {}, JSON.parse(cs), {});
         expect(Object.keys(normalized).length).toBe(1);
         expect(normalized['1']).not.toBeFalsy();
 
@@ -350,7 +355,7 @@ describe('normalize', () => {
             )
         );
         let cs = '{"list":[{"value":"1"},null,{"value":"3"}]}';
-        let normalized = normalizeData('1', type, {}, JSON.parse(cs));
+        let normalized = normalizeData('1', type, {}, JSON.parse(cs), {});
         expect(Object.keys(normalized).length).toBe(3);
         expect(normalized['1']).not.toBeFalsy();
         expect(normalized['1.list.0']).not.toBeFalsy();

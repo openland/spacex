@@ -32,7 +32,7 @@ describe('readFromStore', () => {
             }
         });
 
-        let res = readFromStore('1', store, type, {});
+        let res = readFromStore('1', store, type, {}, {});
         expect(res.result).toBe(true);
         expect(res.value).not.toBeFalsy();
 

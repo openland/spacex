@@ -36,6 +36,7 @@ export interface WebEngineOpts {
     ws?: WebSocketEngine;
     transport?: TransportLayer;
     persistence?: PersistenceProvider;
+    definitions: Definitions;
 }
 
 export class WebEngine implements GraphqlEngine {
@@ -48,11 +49,11 @@ export class WebEngine implements GraphqlEngine {
     private readonly transport: WebTransport;
     private readonly definitions: Definitions;
 
-    constructor(definitions: Definitions, opts: WebEngineOpts) {
+    constructor(opts: WebEngineOpts) {
         this.store = new WebStore(opts);
         this.transport = new WebTransport(opts);
+        this.definitions = opts.definitions;
         this.statusWatcher.setState({ status: 'connecting' });
-        this.definitions = definitions;
 
         this.transport.onStatusChanged = (status) => {
             this.statusWatcher.setState(status);

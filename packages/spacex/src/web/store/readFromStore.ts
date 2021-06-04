@@ -1,9 +1,9 @@
-import { Selector, OutputType } from './../types';
+import { Selector, OutputType, FragmentDefinition } from './../types';
 import { RecordStore, Record, RecordValue } from './RecordStore';
 import { OutputTypeObject } from '../types';
 import { selectorKey } from './selectorKey';
 
-function readValue(value: RecordValue, type: OutputType, store: RecordStore, variables: any): { result: boolean, value?: any } {
+function readValue(value: RecordValue, type: OutputType, store: RecordStore, variables: any, fragments: { [key: string]: FragmentDefinition }): { result: boolean, value?: any } {
     if (type.type === 'scalar') {
         if (value.type === 'null') {
             return { result: true, value: null };
@@ -32,7 +32,7 @@ function readValue(value: RecordValue, type: OutputType, store: RecordStore, var
         if (value.type === 'null') {
             return { result: false };
         } else {
-            return readValue(value, type.inner, store, variables);
+            return readValue(value, type.inner, store, variables, fragments);
         }
     } else if (type.type === 'list') {
         if (value.type === 'null') {
@@ -40,7 +40,7 @@ function readValue(value: RecordValue, type: OutputType, store: RecordStore, var
         } else if (value.type === 'list') {
             let rv: any[] = [];
             for (let v of value.values) {
-                let r = readValue(v, type.inner, store, variables);
+                let r = readValue(v, type.inner, store, variables, fragments);
                 if (!r.result) {
                     return { result: false };
                 }
@@ -54,7 +54,7 @@ function readValue(value: RecordValue, type: OutputType, store: RecordStore, var
         if (value.type === 'null') {
             return { result: true, value: null };
         } else if (value.type === 'reference') {
-            return readSelectors(value.key, store, type.selectors, variables);
+            return readSelectors(value.key, store, type.selectors, variables, fragments);
         } else {
             throw Error('Invalid record value');
         }
@@ -63,12 +63,12 @@ function readValue(value: RecordValue, type: OutputType, store: RecordStore, var
     return { result: false };
 }
 
-function doReadSelectors(record: Record, fields: { [key: string]: any }, store: RecordStore, selectors: Selector[], variables: any): boolean {
+function doReadSelectors(record: Record, fields: { [key: string]: any }, store: RecordStore, selectors: Selector[], variables: any, fragments: { [key: string]: FragmentDefinition }): boolean {
     for (let f of selectors) {
         if (f.type === 'field') {
             let key = selectorKey(f.name, f.arguments, variables);
             if (record.fields[key] !== undefined) {
-                let rv = readValue(record.fields[key], f.fieldType, store, variables);
+                let rv = readValue(record.fields[key], f.fieldType, store, variables, fragments);
                 if (!rv.result) {
                     return false;
                 }
@@ -78,12 +78,12 @@ function doReadSelectors(record: Record, fields: { [key: string]: any }, store: 
             }
         } else if (f.type === 'type-condition') {
             if (record.fields.__typename && record.fields.__typename.type === 'string' && record.fields.__typename.value === f.name) {
-                if (!doReadSelectors(record, fields, store, f.fragmentType.selectors, variables)) {
+                if (!doReadSelectors(record, fields, store, f.fragmentType.selectors, variables, fragments)) {
                     return false;
                 }
             }
         } else if (f.type === 'fragment') {
-            if (!doReadSelectors(record, fields, store, f.fragmentType.selectors, variables)) {
+            if (!doReadSelectors(record, fields, store, fragments[f.name].selector.selectors, variables, fragments)) {
                 return false;
             }
         }
@@ -91,23 +91,23 @@ function doReadSelectors(record: Record, fields: { [key: string]: any }, store: 
     return true;
 }
 
-function readSelectors(cacheKey: string, store: RecordStore, selectors: Selector[], variables: any): { result: boolean, value?: any } {
+function readSelectors(cacheKey: string, store: RecordStore, selectors: Selector[], variables: any, fragments: { [key: string]: FragmentDefinition }): { result: boolean, value?: any } {
     let value = store.read(cacheKey);
     if (Object.keys(value.fields).length === 0) {
         return { result: false };
     }
     let fields: { [key: string]: any } = {};
-    if (!doReadSelectors(value, fields, store, selectors, variables)) {
+    if (!doReadSelectors(value, fields, store, selectors, variables, fragments)) {
         return { result: false };
     }
     return { result: true, value: fields };
 }
 
-export function readFromStore(cacheKey: string, store: RecordStore, type: OutputTypeObject, variables: any): { result: boolean, value?: any } {
-    return readSelectors(cacheKey, store, type.selectors, variables);
+export function readFromStore(cacheKey: string, store: RecordStore, type: OutputTypeObject, variables: any, fragments: { [key: string]: FragmentDefinition }): { result: boolean, value?: any } {
+    return readSelectors(cacheKey, store, type.selectors, variables, fragments);
 }
 
-export function readRootFromStore(cacheKey: string, store: RecordStore, type: OutputTypeObject, variables: any): { result: boolean, value?: any } {
+export function readRootFromStore(cacheKey: string, store: RecordStore, type: OutputTypeObject, variables: any, fragments: { [key: string]: FragmentDefinition }): { result: boolean, value?: any } {
     let fields: { [key: string]: any } = {};
     for (let f of type.selectors) {
         if (f.type !== 'field') {
@@ -119,7 +119,7 @@ export function readRootFromStore(cacheKey: string, store: RecordStore, type: Ou
         if (value.fields.data === undefined) {
             return { result: false };
         }
-        let rv = readValue(value.fields.data, f.fieldType, store, variables);
+        let rv = readValue(value.fields.data, f.fieldType, store, variables, fragments);
         if (!rv.result) {
             return { result: false };
         }
