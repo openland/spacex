@@ -8,6 +8,7 @@
 // ====================================================
 
 export interface DiscoverDevices_discover {
+  __typename: "DiscoveredThing";
   id: string;
   name: string;
   host: string;
@@ -34,6 +35,7 @@ export interface UpdateDeviceDescription_updateDeviceDescription_Lock_addedBy {
 }
 
 export interface UpdateDeviceDescription_updateDeviceDescription_Lock {
+  __typename: "Lock";
   id: string;
   description: string | null;
   addedBy: UpdateDeviceDescription_updateDeviceDescription_Lock_addedBy;
@@ -46,6 +48,7 @@ export interface UpdateDeviceDescription_updateDeviceDescription_Lamp_addedBy {
 }
 
 export interface UpdateDeviceDescription_updateDeviceDescription_Lamp {
+  __typename: "Lamp";
   id: string;
   description: string | null;
   addedBy: UpdateDeviceDescription_updateDeviceDescription_Lamp_addedBy;
@@ -61,6 +64,7 @@ export interface UpdateDeviceDescription_updateDeviceDescription_Switch_addedBy 
 }
 
 export interface UpdateDeviceDescription_updateDeviceDescription_Switch {
+  __typename: "Switch";
   id: string;
   description: string | null;
   addedBy: UpdateDeviceDescription_updateDeviceDescription_Switch_addedBy;
@@ -88,6 +92,7 @@ export interface UpdateDeviceDescriptionVariables {
 // ====================================================
 
 export interface AddUser_addUser {
+  __typename: "User";
   id: string;
 }
 
@@ -110,6 +115,7 @@ export interface AddUserVariables {
 // ====================================================
 
 export interface UserShort {
+  __typename: "User";
   id: string;
 }
 
@@ -123,6 +129,7 @@ export interface UserShort {
 // ====================================================
 
 export interface LampShort {
+  __typename: "Lamp";
   id: string;
   brightness: number;
   minBrightness: number;
@@ -139,6 +146,7 @@ export interface LampShort {
 // ====================================================
 
 export interface DeviceNano {
+  __typename: "Lamp" | "Switch" | "Lock";
   id: string;
 }
 
@@ -158,6 +166,7 @@ export interface DeviceShort_Lock_addedBy {
 }
 
 export interface DeviceShort_Lock {
+  __typename: "Lock";
   id: string;
   description: string | null;
   addedBy: DeviceShort_Lock_addedBy;
@@ -170,6 +179,7 @@ export interface DeviceShort_Lamp_addedBy {
 }
 
 export interface DeviceShort_Lamp {
+  __typename: "Lamp";
   id: string;
   description: string | null;
   addedBy: DeviceShort_Lamp_addedBy;
@@ -185,6 +195,7 @@ export interface DeviceShort_Switch_addedBy {
 }
 
 export interface DeviceShort_Switch {
+  __typename: "Switch";
   id: string;
   description: string | null;
   addedBy: DeviceShort_Switch_addedBy;
