@@ -17,7 +17,7 @@ export type CompileContext = {
     mutations: Map<string, { definition: OperationDefinitionNode, source: string, usesFragments: Set<string> }>,
     subscriptions: Map<string, { definition: OperationDefinitionNode, source: string, usesFragments: Set<string> }>,
     fragments: Map<string, { definition: FragmentDefinitionNode, source: string, usesFragments: Set<string>, usedBy: Set<string> }>
-}
+};
 
 export async function compile(opts: {
     path: string,
@@ -92,9 +92,12 @@ export async function compile(opts: {
                 if (output.has(s.name.value)) {
                     continue;
                 }
+                output.add(s.name.value);
                 _collectDependencies(fragments.get(s.name.value)!.definition.selectionSet, output);
             } else if (s.kind === 'Field') {
-                continue;
+                if (s.selectionSet) {
+                    _collectDependencies(s.selectionSet, output);
+                }
             } else if (s.kind === 'InlineFragment') {
                 _collectDependencies(s.selectionSet, output);
             }

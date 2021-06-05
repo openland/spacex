@@ -1,6 +1,7 @@
+import { OperationDefinition } from './../../../spacex/src/web/types';
 import {
     GraphQLEnumType, SelectionSetNode, SelectionNode, GraphQLOutputType, GraphQLNonNull, GraphQLScalarType,
-    ValueNode, GraphQLUnionType, GraphQLList, GraphQLInterfaceType, isInterfaceType, isObjectType, GraphQLObjectType
+    ValueNode, GraphQLUnionType, GraphQLList, GraphQLInterfaceType, isInterfaceType, isObjectType, GraphQLObjectType, OperationDefinitionNode
 } from 'graphql';
 import { CompileContext } from './compile';
 import {
@@ -55,7 +56,7 @@ export function compileDescriptor(context: CompileContext) {
         } else if (value.kind === 'StringValue') {
             return stringValue(value.value);
         } else if (value.kind === 'ListValue') {
-            return listValue(...value.values.map((v) => generateInputValue(v)))
+            return listValue(...value.values.map((v) => generateInputValue(v)));
         } else if (value.kind === 'ObjectValue') {
             const args: { name: string, value: InputValue }[] = [];
             for (let f of value.fields) {
@@ -120,13 +121,21 @@ export function compileDescriptor(context: CompileContext) {
         } else if (selection.kind === 'FragmentSpread') {
             return fragment(selection.name.value);
         } else {
-            throw Error('Unknown selector')
+            throw Error('Unknown selector');
         }
     }
     function generateSelectionSet(type: string, selectionSet: SelectionSetNode) {
         return obj(
             ...selectionSet.selections.map((s) => generateSelection(type, s))
         );
+    }
+
+    function generateSource(op: { source: string, usesFragments: Set<string> }) {
+        let res = op.source;
+        for (let f of op.usesFragments) {
+            res += ' ' + context.fragments.get(f)!.source;
+        }
+        return res;
     }
 
     // Generate Descriptor
@@ -136,15 +145,15 @@ export function compileDescriptor(context: CompileContext) {
     }
     for (let [name, query] of context.queries.entries()) {
         const r = generateSelectionSet('Query', query.definition.selectionSet);
-        result.operations[name] = { name, kind: 'query', selector: r, body: query.source };
+        result.operations[name] = { name, kind: 'query', selector: r, body: generateSource(query) };
     }
     for (let [name, mutation] of context.mutations.entries()) {
         const r = generateSelectionSet('Mutation', mutation.definition.selectionSet);
-        result.operations[name] = { name, kind: 'mutation', selector: r, body: mutation.source };
+        result.operations[name] = { name, kind: 'mutation', selector: r, body: generateSource(mutation) };
     }
     for (let [name, subscription] of context.subscriptions.entries()) {
         const r = generateSelectionSet('Subscription', subscription.definition.selectionSet);
-        result.operations[name] = { name, kind: 'subscription', selector: r, body: subscription.source };
+        result.operations[name] = { name, kind: 'subscription', selector: r, body: generateSource(subscription) };
     }
 
     // Generate JSON
