@@ -27,10 +27,11 @@ yarn add -D @openland/spacex-cli get-graphql-schema
 
 ### Generate Client
 
-SpaceX Compiler generates three files: 
-* `spacex.definitions.json`: Descriptors of all fragments and operations for GraphQL Engines
-* `spacex.types.ts`: Typescript fragments and operations files
-* `spacex.ts`: Client itself
+SpaceX Compiler generates three files:
+
+- `spacex.definitions.json`: Descriptors of all fragments and operations for GraphQL Engines
+- `spacex.types.ts`: Typescript fragments and operations files
+- `spacex.ts`: Client itself
 
 ```bash
 get-graphql-schema https://api.example.com/graphql --json > schema.json
@@ -49,7 +50,7 @@ import { ExampleClient } from './spacex'
 
 // Transport
 const transport = createCommonTransport({
-  url: 'wss://swan.korshakov.com/graphql',
+  url: 'wss://api.example.com/graphql',
   mode: 'transport-ws',
   connectionParams: {
     token: 'some-fancy-token'
@@ -74,35 +75,46 @@ For each query in definitions there are generated functions on client:
 
 ```js
 // Simple Promise-based api
-const me = await client.queryUser({ username: 'steve' }); // returns: Promise<User>
+const me = await client.queryUser({ username: 'steve' }) // returns: Promise<User>
 
 // Provide fetchPolicy - bypass cache and fetch from network
-const me = await client.queryUser({ username: 'steve' }, { fetchPolicy: 'network-only' });
+const me = await client.queryUser(
+  { username: 'steve' },
+  { fetchPolicy: 'network-only' }
+)
 
 // Refetch method - sugar for fetchPolicy: 'network-only'
-const me = await client.refetchUser({ username: 'steve' });
+const me = await client.refetchUser({ username: 'steve' })
 
 // Hook with suspence
-const me = client.useUser({ username: 'steve' }); // returns: User
+const me = client.useUser({ username: 'steve' }) // returns: User
 
 // Hook with fetchPolicy
-const me = client.useUser({ username: 'steve' }, { fetchPolicy: 'network-only' }); // returns: User
+const me = client.useUser(
+  { username: 'steve' },
+  { fetchPolicy: 'network-only' }
+) // returns: User
 
 // Hook without suspence
-const me = client.useUser({ username: 'steve' }, { suspence: false }); // returns: User | null
+const me = client.useUser({ username: 'steve' }, { suspence: false }) // returns: User | null
 ```
 
 #### Mutations
 
 For each defined mutation there this generated function:
+
 ```js
 // Simple Promise-based api
-const result = await client.mutateSendMessage({ chat: 'steve', message: 'Hello, SpaceX!' });
+const result = await client.mutateSendMessage({
+  chat: 'steve',
+  message: 'Hello, SpaceX!'
+})
 ```
 
 #### Subscriptions
 
 For each defined mutation there this generated function:
+
 ```js
 
 // Subscription
@@ -121,7 +133,9 @@ subscription.destroy();
 ```
 
 #### Reading and Writing to Store
+
 If you want to edit store you are able to update queries in the store via `update*` functions:
+
 ```js
 await client.updateUser({username: 'stever'}, updated: (src) => {
     return {
@@ -131,5 +145,97 @@ await client.updateUser({username: 'stever'}, updated: (src) => {
 });
 ```
 
+## Web Worker
+
+Since there are multiple ways to deploy web workers `SpaceX` provides API for integration and leaves developer a freedom to deploy any way they wish.
+
+### Create Web Worker host
+
+This is a code to run web worker host - the code that executes queries itself and answers for requests from main process.
+
+```js
+import {
+  WebEngine,
+  createCommonTransport,
+  WorkerInterface,
+  WorkerHost
+} from '@openland/spacex-web'
+var host
+
+//
+// Handler for first message: It fetches connectionParams and creates an engine
+//
+const initHandler = (ev: MessageEvent) => {
+  // Read init package
+  let msg = ev.data
+  if (msg.type !== 'init') {
+    throw Error('Worker need to be inited first!')
+  }
+  self.removeEventListener('message', initHandler)
+
+  // Define Worker Interface
+  let workerInterface: WorkerInterface = {
+    post: src => self.postMessage(src),
+    setHandler: handler =>
+      self.addEventListener('message', (src: any) => handler(src.data))
+  }
+
+  // Create transport
+  const transport = createCommonTransport({
+    url: 'wss://api.example.com/graphql',
+    mode: 'transport-ws',
+    connectionParams: {
+      token: msg.token
+    }
+  })
+
+  // Create Engine
+  const engine = new WebEngine({
+    definitions: require('./spacex.descriptor.json'),
+    transport
+  })
+
+  // Create Host
+  host = new WorkerHost({
+    engine,
+    worker: workerInterface
+  })
+}
+
+self.addEventListener('message', initHandler)
+```
+
+### Create Web Worker Engine
+
+```js
+
+// Our connection token
+const token: string = 'some-fancy-worker'
+
+// Create WebWorker
+const W = require('./spacex.worker') // NOTE: We using WebPack plugin to generate web workers
+let thread: Worker = new W()
+thread.onerror = e => {
+  console.error(e) // There are no way to recover easily
+}
+
+// Send init package to worker
+thread.postMessage({ type: 'init', token })
+
+// Create Engine
+let threadInterface: WorkerInterface = {
+  post: src => thread.postMessage(src),
+  setHandler: handler =>
+    (thread.onmessage = src => {
+      handler(src.data)
+    })
+}
+const engine = new WorkerEngine({ worker: threadInterface });
+
+// Client
+const client = new ExampleClient(engine)
+```
+
 # License
+
 MIT
