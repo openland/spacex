@@ -206,7 +206,7 @@ export class CommonTransportLayer<T> implements TransportLayer {
         if (this.opts.logging) {
             console.log('[WS] Connecting');
         }
-        let ws = this.opts.provider.create(this.opts.connectionParams);
+        let ws = this.opts.provider.create(this.opts.endpoint);
         ws.onopen = () => {
             if (this.client !== ws) {
                 return;
