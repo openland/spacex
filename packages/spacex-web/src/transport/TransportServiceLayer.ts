@@ -111,7 +111,7 @@ export class TransportServiceLayer {
     }
 
     private flushQueryStart(op: PendingOperation) {
-        this.transport.request(op.reqiestId, op.operation);
+        this.transport.request(op.reqiestId, { operation: op.operation, variables: op.variables });
     }
 
     private flushQueryStop(op: PendingOperation) {

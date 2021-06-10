@@ -1,4 +1,5 @@
-import { GraphqlUnknownError, OperationDefinition } from '@openland/spacex';
+import { GraphqlUnknownError } from '@openland/spacex';
+import { OperationDefinition } from '../types';
 import { WebSocketConnection, WebSocketProvider } from '../ws/WebSocketProvider';
 import { TransportLayer } from './TransportLayer';
 
@@ -35,7 +36,7 @@ export class CommonTransportLayer<T> implements TransportLayer {
         this.opts = opts;
     }
 
-    request(id: string, message: OperationDefinition) {
+    request(id: string, message: { operation: OperationDefinition, variables: any }) {
         if (this.state === 'waiting' || this.state === 'connecting') {
 
             // Add to pending buffer if we are not connected already
@@ -50,8 +51,8 @@ export class CommonTransportLayer<T> implements TransportLayer {
                 type: 'start',
                 'id': id,
                 'payload': {
-                    query: message.query,
-                    name: message.name,
+                    query: message.operation.body,
+                    name: message.operation.name,
                     variables: message.variables
                 }
             });
@@ -60,8 +61,8 @@ export class CommonTransportLayer<T> implements TransportLayer {
                 type: 'start',
                 'id': id,
                 'payload': {
-                    query: message.query,
-                    name: message.name,
+                    query: message.operation.body,
+                    name: message.operation.name,
                     variables: message.variables
                 }
             });

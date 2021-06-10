@@ -1,4 +1,3 @@
-import { OperationDefinition } from './../../../spacex/src/web/types';
 import {
     GraphQLEnumType, SelectionSetNode, SelectionNode, GraphQLOutputType, GraphQLNonNull, GraphQLScalarType,
     ValueNode, GraphQLUnionType, GraphQLList, GraphQLInterfaceType, isInterfaceType, isObjectType, GraphQLObjectType, OperationDefinitionNode
