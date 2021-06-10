@@ -106,3 +106,70 @@ export type Definitions = {
     operations: { [key: string]: OperationDefinition },
     fragments: { [key: string]: FragmentDefinition }
 };
+
+//
+// Helpers
+// 
+
+export function list(src: OutputType): OutputTypeList {
+    return { type: 'list', inner: src };
+}
+export function notNull(src: OutputType): OutputTypeNotNull {
+    return { type: 'notNull', inner: src };
+}
+export function scalar(name: string): OutputTypeScalar {
+    return { type: 'scalar', name: name };
+}
+export function obj(...selectors: Selector[]): OutputTypeObject {
+    return { type: 'object', selectors: selectors };
+}
+export function field(name: string, alias: string, arg: { [key: string]: InputValue }, type: OutputType): SelectorField {
+    return { type: 'field', name, alias, arguments: arg, fieldType: type };
+}
+export function inline(name: string, inner: OutputTypeObject): SelectorTypeCondition {
+    return { type: 'type-condition', name, fragmentType: inner };
+}
+export function fragment(name: string): SelectorFragment {
+    return { type: 'fragment', name };
+}
+export function args(...fieldArgs: { name: string, value: InputValue }[]): { [key: string]: InputValue } {
+    if (fieldArgs.length === 0) {
+        return {};
+    }
+    let res: { [key: string]: InputValue } = {};
+    for (let f of fieldArgs) {
+        res[f.name] = f.value;
+    }
+    return res;
+}
+export function fieldValue(name: string, value: InputValue) {
+    return { name, value };
+}
+export function refValue(name: string): InputValueReference {
+    return { type: 'reference', name };
+}
+export function intValue(value: number): InputValueInt {
+    return { type: 'int', value };
+}
+export function floatValue(value: number): InputValueFloat {
+    return { type: 'float', value };
+}
+export function stringValue(value: string): InputValueString {
+    return { type: 'string', value };
+}
+export function boolValue(value: boolean): InputValueBoolean {
+    return { type: 'boolean', value };
+}
+export function listValue(...items: InputValue[]): InputValueList {
+    return { type: 'list', items };
+}
+export function nullValue(): InputValueNull {
+    return { type: 'null' };
+}
+export function objectValue(...fields: { name: string, value: InputValue }[]): InputValueObject {
+    let res: { [key: string]: InputValue } = {};
+    for (let f of fields) {
+        res[f.name] = f.value;
+    }
+    return { type: 'object', fields: res };
+}
