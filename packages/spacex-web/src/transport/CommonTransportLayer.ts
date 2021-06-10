@@ -27,7 +27,7 @@ export class CommonTransportLayer<T> implements TransportLayer {
 
     private pingTimeout: any;
     private state: 'waiting' | 'connecting' | 'starting' | 'started' | 'completed' = 'waiting';
-    private pending = new Map<string, any>();
+    private pending = new Map<string, { operation: OperationDefinition, variables: any }>();
     private isStarted = false;
     private isStopped = false;
     private client: WebSocketConnection | null = null;
@@ -236,7 +236,11 @@ export class CommonTransportLayer<T> implements TransportLayer {
                 this.writeToSocket({
                     type: 'start',
                     id: p[0],
-                    payload: p[1]
+                    payload: {
+                        query: p[1].operation.body, 
+                        name: p[1].operation.name,
+                        variables: p[1].variables
+                    }
                 });
             }
         };
