@@ -120,5 +120,16 @@ const subscription = client.subscribeNewMessages({ chat: 'steve', from: Date.now
 subscription.destroy();
 ```
 
+#### Reading and Writing to Store
+If you want to edit store you are able to update queries in the store via `update*` functions:
+```js
+await client.updateUser({username: 'stever'}, updated: (src) => {
+    return {
+        ...src,
+        friends: src.friends + 1
+    };
+});
+```
+
 # License
 MIT
