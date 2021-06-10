@@ -17,6 +17,9 @@
             "path": "./packages/spacex"
         },
         {
+            "path": "./packages/spacex-web"
+        },
+        {
             "path": "./packages/spacex-cli"
         },
     ]

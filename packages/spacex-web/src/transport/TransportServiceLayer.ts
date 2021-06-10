@@ -1,6 +1,5 @@
-import { ApolloTransportLayer } from './ApolloTransportLayer';
+import { GraphqlEngineStatus } from '@openland/spacex';
 import { WebEngineOpts } from './../WebEngine';
-import { GraphqlEngineStatus } from './../../GraphqlEngine';
 import { OperationDefinition } from './../types';
 import { TransportResult } from './WebTransport';
 import { TransportLayer } from './TransportLayer';
@@ -15,19 +14,19 @@ export class TransportServiceLayer {
     onStatusChanged: ((status: GraphqlEngineStatus) => void) | null = null;
 
     constructor(opts: WebEngineOpts) {
-        this.transport = opts.transport ? opts.transport : new ApolloTransportLayer(opts);
+        this.transport = opts.transport;
         this.transport.onConnected = () => {
-            if (opts.logging) {
-                console.log('[TX] Connected');
-            }
+            // if (opts.logging) {
+            //     console.log('[TX] Connected');
+            // }
             if (this.onStatusChanged) {
                 this.onStatusChanged({ status: 'connected' });
             }
         };
         this.transport.onDisconnected = () => {
-            if (opts.logging) {
-                console.log('[TX] Disconnected');
-            }
+            // if (opts.logging) {
+            //     console.log('[TX] Disconnected');
+            // }
             if (this.onStatusChanged) {
                 this.onStatusChanged({ status: 'connecting' });
             }
@@ -71,9 +70,9 @@ export class TransportServiceLayer {
         };
 
         this.transport.onSessionLost = () => {
-            if (opts.logging) {
-                console.log('[TX] Session lost');
-            }
+            // if (opts.logging) {
+            //     console.log('[TX] Session lost');
+            // }
             for (let op of Array.from(this.liveOperations.values()) /* I am not sure if i can iterate and delete from map */) {
 
                 if (op.operation.kind === 'subscription') {
@@ -112,11 +111,7 @@ export class TransportServiceLayer {
     }
 
     private flushQueryStart(op: PendingOperation) {
-        this.transport.request(op.reqiestId, {
-            query: op.operation.body,
-            name: op.operation.name,
-            variables: op.variables
-        });
+        this.transport.request(op.reqiestId, op.operation);
     }
 
     private flushQueryStop(op: PendingOperation) {

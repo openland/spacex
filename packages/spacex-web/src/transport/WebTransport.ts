@@ -1,5 +1,5 @@
+import { GraphqlEngineStatus } from '@openland/spacex';
 import { WebEngineOpts } from './../WebEngine';
-import { GraphqlEngineStatus } from '../../GraphqlEngine';
 import { TransportServiceLayer } from './TransportServiceLayer';
 import { OperationDefinition } from '../types';
 
@@ -7,7 +7,7 @@ export type TransportResult = { type: 'result', value: any } | { type: 'error', 
 
 export class WebTransport {
 
-    private readonly opts: WebEngineOpts
+    private readonly opts: WebEngineOpts;
     private readonly serviceLayer: TransportServiceLayer;
     onStatusChanged: ((status: GraphqlEngineStatus) => void) | null = null;
 

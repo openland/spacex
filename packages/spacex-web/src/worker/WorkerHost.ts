@@ -1,7 +1,7 @@
+import { GraphqlEngine, GraphqlActiveSubscription } from '@openland/spacex';
 import { Serializer } from './Serializer';
 import { WorkerRequest, WorkerResponse } from './WorkerApi';
 import { WorkerInterface } from './WorkerApi';
-import { GraphqlEngine, GraphqlActiveSubscription } from './../GraphqlEngine';
 import { randomKey } from '../utils/randomKey';
 
 export class WorkerHost {

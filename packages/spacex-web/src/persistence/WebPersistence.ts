@@ -7,7 +7,7 @@ export class WebPersistence {
     private readonly persistence: PersistenceProvider;
 
     constructor(opts: WebEngineOpts) {
-        this.persistence = opts.persistence ? opts.persistence : new PersistenceEmptyProvider()
+        this.persistence = opts.persistence ? opts.persistence : new PersistenceEmptyProvider();
     }
 
     async saveRecords(records: RecordSet): Promise<void> {

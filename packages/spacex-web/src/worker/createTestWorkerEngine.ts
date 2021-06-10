@@ -1,6 +1,6 @@
 import { WorkerEngine } from './WorkerEngine';
 import { WorkerHost } from './WorkerHost';
-import { GraphqlEngine } from '../GraphqlEngine';
+import { GraphqlEngine } from '@openland/spacex/src/GraphqlEngine';
 import { WorkerInterface } from './WorkerApi';
 
 export function createTestWorkerEngine(engine: GraphqlEngine) {

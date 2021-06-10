@@ -1,7 +1,6 @@
-import { PersistenceProvider } from './persistence/PersistenceProvider';
-import { GraphqlUnknownError, GraphqlError } from '../GraphqlError';
-import { Watcher } from '../utils/Watcher';
 import {
+    GraphqlUnknownError, 
+    GraphqlError,
     GraphqlEngine,
     GraphqlEngineStatus,
     QueryParameters,
@@ -12,12 +11,14 @@ import {
     GraphqlActiveSubscription,
     MutationParameters,
     SubscriptionParameters
-} from '../GraphqlEngine';
+} from '@openland/spacex';
 import { Definitions } from './types';
+import { PersistenceProvider } from './persistence/PersistenceProvider';
 import { WebTransport } from './transport/WebTransport';
 import { WebStore } from './store/WebStore';
-import { randomKey } from '../utils/randomKey';
-import { WebSocketEngine } from './transport/WebSocketEngine';
+import { randomKey } from './utils/randomKey';
+import { Watcher } from './utils/Watcher';
+import { WebSocketProvider } from './ws/WebSocketProvider';
 import { TransportLayer } from './transport/TransportLayer';
 
 class QueryWatchState {
@@ -28,15 +29,10 @@ class QueryWatchState {
 }
 
 export interface WebEngineOpts {
-    endpoint: string;
-    connectionParams?: any;
-    protocol?: 'apollo' | 'openland';
-    onConnectionFailed?: (message: string) => void;
     logging?: boolean;
-    ws?: WebSocketEngine;
-    transport?: TransportLayer;
-    persistence?: PersistenceProvider;
     definitions: Definitions;
+    transport: TransportLayer;
+    persistence?: PersistenceProvider;
 }
 
 export class WebEngine implements GraphqlEngine {
@@ -87,7 +83,7 @@ export class WebEngine implements GraphqlEngine {
         }
 
         if (fetchPolicy === 'cache-and-network') {
-            throw new GraphqlUnknownError('Unable to use CACHE_AND_NETWORK policy for non watchable query');
+            throw new GraphqlUnknownError('Unable to use cache-and-network policy for non watchable query');
         }
 
         if (fetchPolicy === 'cache-first') {

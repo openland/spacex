@@ -1,31 +1,28 @@
-import { WebSocketConnection, WebSocketEngine, DefaultWebSocketEngine } from './../WebSocketEngine';
+import { WebSocketConnection, WebSocketProvider } from '../WebSocketProvider';
 
-export type ThrusterConfig = { url: string, timeout: number };
+export type ThrusterConfig<T> = { endpoint: T, timeout: number };
 
 /**
  * This class provides a factory for rapid WebSocket connection establishing by using several 
  * parallel attempts with different settings. First success wins.
  */
-export class Thruster {
-    readonly configs: ThrusterConfig[];
+export class Thruster<T> {
+    readonly configs: ThrusterConfig<T>[];
     readonly onSuccess: (socket: WebSocketConnection) => void;
-    readonly protocol?: string;
 
-    private engine: WebSocketEngine;
+    private provider: WebSocketProvider<T>;
     private bucketSockets: (WebSocketConnection | null)[] = [];
     private bucketTimeout: any[] = [];
     private closed = false;
 
     constructor(opts: {
-        engine?: WebSocketEngine,
-        configs: ThrusterConfig[],
-        protocol?: string,
+        provider: WebSocketProvider<T>,
+        configs: ThrusterConfig<T>[],
         onSuccess: (socket: WebSocketConnection) => void
     }) {
-        this.engine = opts.engine || DefaultWebSocketEngine;
+        this.provider = opts.provider;
         this.configs = opts.configs;
         this.onSuccess = opts.onSuccess;
-        this.protocol = opts.protocol;
 
         for (let i = 0; i < opts.configs.length; i++) {
             this.bucketSockets.push(null);
@@ -39,7 +36,7 @@ export class Thruster {
 
     private restartBucket = (bucket: number) => {
         const timeout = this.configs[bucket].timeout;
-        const url = this.configs[bucket].url;
+        const endpoint = this.configs[bucket].endpoint;
 
         // Close existing
         if (this.bucketSockets[bucket]) {
@@ -57,7 +54,7 @@ export class Thruster {
             this.bucketTimeout[bucket] = null;
         }
 
-        const ws = this.engine.create(url, this.protocol);
+        const ws = this.provider.create(endpoint);
         this.bucketSockets[bucket] = ws;
         ws.onopen = () => {
 

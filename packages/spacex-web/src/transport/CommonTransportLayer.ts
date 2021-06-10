@@ -1,14 +1,20 @@
-import { WebEngineOpts } from '../WebEngine';
-import { GraphqlUnknownError } from '../../GraphqlError';
-import { ThrustedSocket } from './net/ThrustedSocket';
+import { GraphqlUnknownError, OperationDefinition } from '@openland/spacex';
+import { WebSocketConnection, WebSocketProvider } from '../ws/WebSocketProvider';
 import { TransportLayer } from './TransportLayer';
 
-const APOLLO_SOCKET_TIMEOUT = 10000;
-const OPENLAND_SOCKET_TIMEOUT = 5000;
 const PING_INTERVAL = 1000;
 
-export class ApolloTransportLayer implements TransportLayer {
-    private readonly opts: WebEngineOpts;
+export type CommonTransportOpts<T> = {
+    provider: WebSocketProvider<T>;
+    endpoint: T;
+    connectionParams?: any;
+    mode: 'transport-ws' | 'openland';
+    pingInterval?: number;
+    logging?: boolean;
+};
+
+export class CommonTransportLayer<T> implements TransportLayer {
+    private readonly opts: CommonTransportOpts<T>;
 
     onReceiveData: ((id: string, message: any) => void) | null = null;
     onReceiveError: ((id: string, error: any[]) => void) | null = null;
@@ -23,13 +29,13 @@ export class ApolloTransportLayer implements TransportLayer {
     private pending = new Map<string, any>();
     private isStarted = false;
     private isStopped = false;
-    private client: ThrustedSocket | null = null;
+    private client: WebSocketConnection | null = null;
 
-    constructor(opts: WebEngineOpts) {
+    constructor(opts: CommonTransportOpts<T>) {
         this.opts = opts;
     }
 
-    request(id: string, message: { id: string, name: string, query: string, variables: any }) {
+    request(id: string, message: OperationDefinition) {
         if (this.state === 'waiting' || this.state === 'connecting') {
 
             // Add to pending buffer if we are not connected already
@@ -132,12 +138,12 @@ export class ApolloTransportLayer implements TransportLayer {
                     clearTimeout(this.pingTimeout);
                 }
                 this.pingTimeout = setTimeout(() => {
-                    if (this.opts.protocol === 'openland') {
+                    if (this.opts.mode === 'openland') {
                         this.writeToSocket({
                             type: 'ping'
                         });
                     }
-                }, PING_INTERVAL);
+                }, this.opts.pingInterval || PING_INTERVAL);
 
                 // TODO: Reset backoff
                 if (this.onConnected) {
@@ -145,7 +151,7 @@ export class ApolloTransportLayer implements TransportLayer {
                 }
             }
         } else if (src.type === 'ping') {
-            if (this.opts.protocol === 'openland') {
+            if (this.opts.mode === 'openland') {
                 this.writeToSocket({
                     type: 'pong'
                 });
@@ -157,13 +163,13 @@ export class ApolloTransportLayer implements TransportLayer {
             }
             this.pingTimeout = setTimeout(() => {
                 if (this.state === 'started') {
-                    if (this.opts.protocol === 'openland') {
+                    if (this.opts.mode === 'openland') {
                         this.writeToSocket({
                             type: 'ping'
                         });
                     }
                 }
-            }, PING_INTERVAL);
+            }, this.opts.pingInterval || PING_INTERVAL);
         } else if (src.type === 'data') {
             let id = src.id as string;
             let payload = src.payload as any;
@@ -183,9 +189,9 @@ export class ApolloTransportLayer implements TransportLayer {
             console.warn(src);
         } else if (src.type === 'connection_error') {
             if (src.payload && typeof src.payload.message === 'string') {
-                if (this.opts.onConnectionFailed) {
-                    this.opts.onConnectionFailed(src.payload.message);
-                }
+                console.warn('[WS]: Connection Error: ' + src.payload.message);
+            } else {
+                console.warn('[WS]: Connection Error');
             }
         }
     }
@@ -199,13 +205,7 @@ export class ApolloTransportLayer implements TransportLayer {
         if (this.opts.logging) {
             console.log('[WS] Connecting');
         }
-        let protocol = this.opts.protocol || 'apollo';
-        let ws = new ThrustedSocket({
-            url: this.opts.endpoint,
-            timeout: protocol === 'openland' ? OPENLAND_SOCKET_TIMEOUT : APOLLO_SOCKET_TIMEOUT,
-            protocol: protocol === 'apollo' ? 'graphql-ws' : undefined,
-            engine: this.opts.ws
-        });
+        let ws = this.opts.provider.create(this.opts.connectionParams);
         ws.onopen = () => {
             if (this.client !== ws) {
                 return;
@@ -218,7 +218,7 @@ export class ApolloTransportLayer implements TransportLayer {
                 console.log('[WS] Starting');
             }
 
-            if (protocol === 'apollo') {
+            if (this.opts.mode === 'transport-ws') {
                 this.writeToSocket({
                     type: 'connection_init',
                     'payload': this.opts.connectionParams || {}
@@ -256,7 +256,6 @@ export class ApolloTransportLayer implements TransportLayer {
                 if (this.opts.logging) {
                     console.log('[WS] Session Lost');
                 }
-
                 if (this.onDisconnected) {
                     this.onDisconnected();
                 }
@@ -291,7 +290,9 @@ export class ApolloTransportLayer implements TransportLayer {
     }
 
     private writeToSocket(src: any) {
-        // console.log('[WS] >>> ' + JSON.stringify(src));
+        if (this.opts.logging) {
+            console.log('[WS] >>> ' + JSON.stringify(src));
+        }
         this.client!.send(JSON.stringify(src));
     }
 }

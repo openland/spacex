@@ -1,9 +1,13 @@
-import { SubscriptionParameters } from './../GraphqlEngine';
-import { PriorityContext } from './../PriorityContext';
+import {
+    SubscriptionParameters,
+    PriorityContext,
+    GraphqlBridgedEngine,
+    QueryParameters,
+    QueryWatchParameters,
+    MutationParameters
+} from '@openland/spacex';
 import { Serializer } from './Serializer';
 import { WorkerInterface, WorkerResponse, WorkerRequest } from './WorkerApi';
-import { GraphqlBridgedEngine } from "../GraphqlBridgedEngine";
-import { QueryParameters, QueryWatchParameters, MutationParameters } from '../GraphqlEngine';
 
 function resolvePriority(src: PriorityContext | number | undefined | null) {
     if (src !== null && src !== undefined) {

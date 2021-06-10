@@ -1,4 +1,4 @@
-import { QueryParameters, QueryWatchParameters, SubscriptionParameters, MutationParameters } from './../GraphqlEngine';
+import { QueryParameters, QueryWatchParameters, SubscriptionParameters, MutationParameters } from '@openland/spacex';
 export interface WorkerInterface {
     setHandler(handler: ((data: any) => void)): void;
     post(data: any): void;

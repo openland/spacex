@@ -1,16 +1,5 @@
 import WebSocket from 'isomorphic-ws';
-
-export interface WebSocketEngine {
-    create(url: string, protocol?: string): WebSocketConnection;
-}
-
-export interface WebSocketConnection {
-    onopen: (() => void) | null;
-    onclose: (() => void) | null;
-    onmessage: ((message: string) => void) | null;
-    send(message: string): void;
-    close(): void;
-}
+import { WebSocketProvider, WebSocketConnection } from './WebSocketProvider';
 
 const empty = () => { /* */ };
 
@@ -40,15 +29,15 @@ class DefaultWebSocketConnection implements WebSocketConnection {
                     }
                 }
             }
-        }
+        };
         this._ws.onclose = () => {
             this.close();
         };
         this._ws.onerror = () => {
             this.close();
         };
-        if (this._ws.on) {
-            this._ws.on('error', () => {
+        if ((this._ws as any).on) {
+            (this._ws as any).on('error', () => {
                 this.close();
             });
         }
@@ -79,8 +68,8 @@ class DefaultWebSocketConnection implements WebSocketConnection {
     }
 }
 
-export const DefaultWebSocketEngine: WebSocketEngine = {
-    create(url: string, protocol?: string) {
-        return new DefaultWebSocketConnection(new WebSocket(url, protocol));
+export class DefaultWebSocketProvider implements WebSocketProvider<{ url: string, protocol?: string }> {
+    create(connectionParams: { url: string, protocol?: string }): WebSocketConnection {
+        return new DefaultWebSocketConnection(new WebSocket(connectionParams.url, connectionParams.protocol));
     }
 }

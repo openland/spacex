@@ -30,6 +30,7 @@ module.exports = {
         'node_modules'
     ],
     moduleNameMapper: {
-        '^spacex$$': '<rootDir>/packages/spacex$/src'
+        '^spacex$$': '<rootDir>/packages/spacex$/src',
+        '^spacex-web$$': '<rootDir>/packages/spacex-web$/src'
     }
 };

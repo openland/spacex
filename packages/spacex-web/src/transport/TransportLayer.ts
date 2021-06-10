@@ -1,3 +1,4 @@
+import { OperationDefinition } from '@openland/spacex';
 export interface TransportLayer {
     onConnected: (() => void) | null;
     onDisconnected: (() => void) | null;
@@ -8,7 +9,7 @@ export interface TransportLayer {
 
     onSessionLost: (() => void) | null;
 
-    request(id: string, message: { name: string, query: string, variables: any }): void;
+    request(id: string, message: OperationDefinition): void;
     cancel(id: string): void;
 
     connect(): void;

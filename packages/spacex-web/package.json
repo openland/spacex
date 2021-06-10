@@ -1,5 +1,5 @@
 {
-  "name": "@openland/spacex",
+  "name": "@openland/spacex-web",
   "version": "4.1.6",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -7,6 +7,7 @@
     "react": "*"
   },
   "dependencies": {
+    "@openland/spacex": "^4.1.6",
     "isomorphic-ws": "4.0.1",
     "uuid": "3.4.0",
     "ws": "7.2.1"

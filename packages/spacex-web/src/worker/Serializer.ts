@@ -1,4 +1,4 @@
-import { GraphqlError, GraphqlUnknownError } from "../GraphqlError"
+import { GraphqlError, GraphqlUnknownError } from '@openland/spacex';
 
 export const Serializer = {
     serializeError: (src: any) => {
