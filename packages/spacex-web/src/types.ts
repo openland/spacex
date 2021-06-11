@@ -27,19 +27,19 @@ export type OutputType =
 
 export type InputValueString = {
     type: 'string',
-    value: string
+    str: string
 };
 export type InputValueInt = {
     type: 'int',
-    value: number
+    int: number
 };
 export type InputValueFloat = {
     type: 'float',
-    value: number
+    float: number
 };
 export type InputValueBoolean = {
     type: 'boolean',
-    value: boolean
+    bool: boolean
 };
 export type InputValueNull = {
     type: 'null'
@@ -148,17 +148,17 @@ export function fieldValue(name: string, value: InputValue) {
 export function refValue(name: string): InputValueReference {
     return { type: 'reference', name };
 }
-export function intValue(value: number): InputValueInt {
-    return { type: 'int', value };
+export function intValue(int: number): InputValueInt {
+    return { type: 'int', int };
 }
-export function floatValue(value: number): InputValueFloat {
-    return { type: 'float', value };
+export function floatValue(float: number): InputValueFloat {
+    return { type: 'float', float };
 }
-export function stringValue(value: string): InputValueString {
-    return { type: 'string', value };
+export function stringValue(str: string): InputValueString {
+    return { type: 'string', str };
 }
-export function boolValue(value: boolean): InputValueBoolean {
-    return { type: 'boolean', value };
+export function boolValue(bool: boolean): InputValueBoolean {
+    return { type: 'boolean', bool };
 }
 export function listValue(...items: InputValue[]): InputValueList {
     return { type: 'list', items };

@@ -22,13 +22,13 @@ function selectorValueKey(src: any): string {
 
 function selectorInputValueKey(value: InputValue, queryArguments: any): string | null {
     if (value.type === 'int') {
-        return value.value + ''; // Check type?
+        return value.int + ''; // Check type?
     } else if (value.type === 'float') {
-        return value.value + ''; // Check type?        
+        return value.float + ''; // Check type?        
     } else if (value.type === 'boolean') {
-        return value.value + ''; // Check type?
+        return value.bool + ''; // Check type?
     } else if (value.type === 'string') {
-        return `"${value.value}"`;
+        return `"${value.str}"`;
     } else if (value.type === 'null') {
         return 'null';
     } else if (value.type === 'list') {
