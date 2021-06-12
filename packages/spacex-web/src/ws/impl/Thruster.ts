@@ -54,7 +54,7 @@ export class Thruster<T> {
             this.bucketTimeout[bucket] = null;
         }
 
-        const ws = this.provider.create(endpoint);
+        const ws = this.provider.create(endpoint, { connectionTimeout: timeout + 1000 });
         this.bucketSockets[bucket] = ws;
         ws.onopen = () => {
 

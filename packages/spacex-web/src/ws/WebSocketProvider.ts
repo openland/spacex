@@ -1,6 +1,10 @@
 export interface WebSocketProvider<T> {
-    create(endpoint: T): WebSocketConnection;
+    create(endpoint: T, opts: WebSocketConnectionOpts): WebSocketConnection;
 }
+
+export type WebSocketConnectionOpts = {
+    connectionTimeout: number;
+};
 
 export interface WebSocketConnection {
     onopen: (() => void) | null;

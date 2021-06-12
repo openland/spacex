@@ -1,9 +1,9 @@
 import { WatchDogTimer } from './impl/WatchDogTimer';
-import { WebSocketConnection, WebSocketProvider } from './WebSocketProvider';
+import { WebSocketConnection, WebSocketConnectionOpts, WebSocketProvider } from './WebSocketProvider';
 
 class WatchDogConnection implements WebSocketConnection {
 
-    private readonly _timeout: number;
+    private readonly _opts: WatchDogProviderOpts;
     private readonly _inner: WebSocketConnection;
     private watchDog: WatchDogTimer | null = null;
     private _started = false;
@@ -13,9 +13,9 @@ class WatchDogConnection implements WebSocketConnection {
     onclose: (() => void) | null = null;
     onmessage: ((msg: string) => void) | null = null;
 
-    constructor(inner: WebSocketConnection, timeout: number) {
+    constructor(inner: WebSocketConnection, opts: WatchDogProviderOpts) {
         this._inner = inner;
-        this._timeout = timeout;
+        this._opts = opts;
         this._inner.onopen = () => {
             if (this._started) {
                 throw Error('Already started');
@@ -26,7 +26,7 @@ class WatchDogConnection implements WebSocketConnection {
             this._started = true;
 
             // Start watchdog
-            this.watchDog = new WatchDogTimer(timeout, () => {
+            this.watchDog = new WatchDogTimer(this._opts.timeout, () => {
                 this._inner.close();
             });
             this.watchDog.reset();
@@ -93,16 +93,21 @@ class WatchDogConnection implements WebSocketConnection {
     }
 }
 
+export type WatchDogProviderOpts = {
+    timeout: number;
+    logging?: boolean;
+};
+
 export class WatchDogProvider<T> implements WebSocketProvider<T> {
     readonly inner: WebSocketProvider<T>;
-    readonly opts: { timeout: number };
+    readonly opts: WatchDogProviderOpts;
 
-    constructor(inner: WebSocketProvider<T>, opts: { timeout: number }) {
+    constructor(inner: WebSocketProvider<T>, opts: WatchDogProviderOpts) {
         this.opts = opts;
         this.inner = inner;
     }
 
-    create(endpoint: T): WebSocketConnection {
-        return new WatchDogConnection(this.inner.create(endpoint), this.opts.timeout);
+    create(endpoint: T, opts: WebSocketConnectionOpts): WebSocketConnection {
+        return new WatchDogConnection(this.inner.create(endpoint, opts), this.opts);
     }
 }

@@ -1,18 +1,21 @@
 import WebSocket from 'isomorphic-ws';
-import { WebSocketProvider, WebSocketConnection } from './WebSocketProvider';
+import { WebSocketProvider, WebSocketConnection, WebSocketConnectionOpts } from './WebSocketProvider';
 
 const empty = () => { /* */ };
 
 class DefaultWebSocketConnection implements WebSocketConnection {
     private _ws: WebSocket;
     private _state: 'connecting' | 'open' | 'closed' = 'connecting';
+    private _opts: WebSocketConnectionOpts;
+    private _connectionTimer: any | null;
 
     onopen: (() => void) | null = null;
     onclose: (() => void) | null = null;
     onmessage: ((message: string) => void) | null = null;
 
-    constructor(ws: WebSocket) {
+    constructor(ws: WebSocket, opts: WebSocketConnectionOpts) {
         this._ws = ws;
+        this._opts = opts;
         this._ws.onopen = () => {
             if (this._state === 'connecting') {
                 this._state = 'open';
@@ -31,16 +34,19 @@ class DefaultWebSocketConnection implements WebSocketConnection {
             }
         };
         this._ws.onclose = () => {
-            this.close();
+            this.doClose(true);
         };
         this._ws.onerror = () => {
-            this.close();
+            this.doClose(true);
         };
         if ((this._ws as any).on) {
             (this._ws as any).on('error', () => {
-                this.close();
+                this.doClose(true);
             });
         }
+        this._connectionTimer = setInterval(() => {
+            this.doClose(true);
+        }, opts.connectionTimeout);
     }
 
     send(message: string) {
@@ -54,8 +60,13 @@ class DefaultWebSocketConnection implements WebSocketConnection {
     }
 
     close() {
+        this.doClose(false);
+    }
+
+    private doClose(notify: boolean) {
         if (this._state !== 'closed') {
             this._state = 'closed';
+            clearTimeout(this._connectionTimer);
             this._ws.onclose = empty;
             this._ws.onopen = empty;
             this._ws.onmessage = empty;
@@ -64,12 +75,26 @@ class DefaultWebSocketConnection implements WebSocketConnection {
             } catch (e) {
                 // Ignore
             }
+            if (notify) {
+                if (this.onclose) {
+                    this.onclose();
+                }
+            }
         }
     }
 }
 
+export type DefaultWebSocketProviderOpts = {
+    connectionTimeout: number;
+    logging?: boolean;
+};
+
 export class DefaultWebSocketProvider implements WebSocketProvider<{ url: string, protocol?: string }> {
-    create(connectionParams: { url: string, protocol?: string }): WebSocketConnection {
-        return new DefaultWebSocketConnection(new WebSocket(connectionParams.url, connectionParams.protocol));
+    readonly opts: DefaultWebSocketProviderOpts;
+    constructor(opts: DefaultWebSocketProviderOpts) {
+        this.opts = opts;
+    }
+    create(connectionParams: { url: string, protocol?: string }, opts: WebSocketConnectionOpts): WebSocketConnection {
+        return new DefaultWebSocketConnection(new WebSocket(connectionParams.url, connectionParams.protocol), opts);
     }
 }

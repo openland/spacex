@@ -1,5 +1,5 @@
 import { Thruster, ThrusterConfig } from './impl/Thruster';
-import { WebSocketProvider, WebSocketConnection } from './WebSocketProvider';
+import { WebSocketProvider, WebSocketConnection, WebSocketConnectionOpts } from './WebSocketProvider';
 
 class ThrustedWebSocketConnection<T> implements WebSocketConnection {
 
@@ -7,20 +7,21 @@ class ThrustedWebSocketConnection<T> implements WebSocketConnection {
     private _stopped = false;
     private _started = false;
     private _connection: WebSocketConnection | null = null;
+    private _opts: ThrustedWebSocketProviderOpts;
 
     onopen: (() => void) | null = null;
     onclose: (() => void) | null = null;
     onmessage: ((msg: string) => void) | null = null;
 
-    constructor(opts: { inner: WebSocketProvider<T>, endpoint: T, buckets: number[] }) {
-
+    constructor(inner: WebSocketProvider<T>, endpoint: T, opts: ThrustedWebSocketProviderOpts) {
+        this._opts = opts;
         let configs: ThrusterConfig<T>[] = [];
         for (let b of opts.buckets) {
-            configs.push({ endpoint: opts.endpoint, timeout: b });
+            configs.push({ endpoint: endpoint, timeout: b });
         }
 
         this.thruster = new Thruster({
-            provider: opts.inner,
+            provider: inner,
             configs,
             onSuccess: (connection) => {
                 if (this._stopped) {
@@ -78,20 +79,21 @@ class ThrustedWebSocketConnection<T> implements WebSocketConnection {
     }
 }
 
+export type ThrustedWebSocketProviderOpts = {
+    buckets: number[];
+    logging?: boolean;
+};
+
 export class ThrustedWebSocketProvider<T> implements WebSocketProvider<T> {
     private readonly inner: WebSocketProvider<T>;
-    private readonly opts: { buckets: number[] };
+    private readonly opts: ThrustedWebSocketProviderOpts;
 
-    constructor(inner: WebSocketProvider<T>, opts: { buckets: number[] }) {
+    constructor(inner: WebSocketProvider<T>, opts: ThrustedWebSocketProviderOpts) {
         this.inner = inner;
         this.opts = opts;
     }
 
-    create(endpoint: T): WebSocketConnection {
-        return new ThrustedWebSocketConnection<T>({
-            inner: this.inner,
-            endpoint,
-            buckets: this.opts.buckets
-        });
+    create(endpoint: T, opts: WebSocketConnectionOpts): WebSocketConnection {
+        return new ThrustedWebSocketConnection<T>(this.inner, endpoint, this.opts);
     }
 }

@@ -15,10 +15,11 @@ export function createCommonTransport(opts: {
     thrusterBuckets?: number[],
 
     watchDogTimeout?: number,
+    connectionTimeout?: number
 }): TransportLayer {
 
     // Base WS transport
-    let wsLayer: WebSocketProvider<{ url: string, protocol?: string }> = new DefaultWebSocketProvider();
+    let wsLayer: WebSocketProvider<{ url: string, protocol?: string }> = new DefaultWebSocketProvider({ logging: opts.logging, connectionTimeout: opts.connectionTimeout || 15000 });
 
     // WatchDog
     let watchDogTimeout = 15000;
@@ -26,7 +27,7 @@ export function createCommonTransport(opts: {
         watchDogTimeout = 5000;
     }
     watchDogTimeout = opts.watchDogTimeout || watchDogTimeout;
-    wsLayer = new WatchDogProvider(wsLayer, { timeout: watchDogTimeout });
+    wsLayer = new WatchDogProvider(wsLayer, { timeout: watchDogTimeout, logging: opts.logging });
 
     // Thruster
     if (opts.thruster) {
