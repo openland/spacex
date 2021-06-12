@@ -206,7 +206,7 @@ export class CommonTransportLayer<T> implements TransportLayer {
         if (this.opts.logging) {
             console.log('[WS] Connecting');
         }
-        let ws = this.opts.provider.create(this.opts.endpoint);
+        let ws = this.opts.provider.create(this.opts.endpoint, { connectionTimeout: 15000 });
         ws.onopen = () => {
             if (this.client !== ws) {
                 return;
@@ -237,7 +237,7 @@ export class CommonTransportLayer<T> implements TransportLayer {
                     type: 'start',
                     id: p[0],
                     payload: {
-                        query: p[1].operation.body, 
+                        query: p[1].operation.body,
                         name: p[1].operation.name,
                         variables: p[1].variables
                     }
