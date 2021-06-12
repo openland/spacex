@@ -19,6 +19,7 @@ class DefaultWebSocketConnection implements WebSocketConnection {
         this._ws.onopen = () => {
             if (this._state === 'connecting') {
                 this._state = 'open';
+                clearTimeout(this._connectionTimer);
                 if (this.onopen) {
                     this.onopen();
                 }
