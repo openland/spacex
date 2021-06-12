@@ -3,22 +3,37 @@ import { WebSocketProvider, WebSocketConnection, WebSocketConnectionOpts } from 
 
 const empty = () => { /* */ };
 
+export type DefaultWebSocketProviderOpts = {
+    connectionTimeout: number;
+    logging?: boolean;
+};
+
+let nextConnectionID = 1;
 class DefaultWebSocketConnection implements WebSocketConnection {
+    readonly id: number = nextConnectionID++;
     private _ws: WebSocket;
     private _state: 'connecting' | 'open' | 'closed' = 'connecting';
     private _opts: WebSocketConnectionOpts;
+    private _popts: DefaultWebSocketProviderOpts;
     private _connectionTimer: any | null;
 
     onopen: (() => void) | null = null;
     onclose: (() => void) | null = null;
     onmessage: ((message: string) => void) | null = null;
 
-    constructor(ws: WebSocket, opts: WebSocketConnectionOpts) {
+    constructor(ws: WebSocket, opts: WebSocketConnectionOpts, popts: DefaultWebSocketProviderOpts) {
         this._ws = ws;
         this._opts = opts;
+        this._popts = popts;
+        if (this._popts.logging) {
+            console.log(`[WS/${this.id}]: Connecting...`);
+        }
         this._ws.onopen = () => {
             if (this._state === 'connecting') {
                 this._state = 'open';
+                if (this._popts.logging) {
+                    console.log(`[WS/${this.id}]: Open`);
+                }
                 clearTimeout(this._connectionTimer);
                 if (this.onopen) {
                     this.onopen();
@@ -35,17 +50,29 @@ class DefaultWebSocketConnection implements WebSocketConnection {
             }
         };
         this._ws.onclose = () => {
+            if (this._popts.logging) {
+                console.log(`[WS/${this.id}]: onclose called`);
+            }
             this.doClose(true);
         };
         this._ws.onerror = () => {
+            if (this._popts.logging) {
+                console.log(`[WS/${this.id}]: onerror called`);
+            }
             this.doClose(true);
         };
         if ((this._ws as any).on) {
             (this._ws as any).on('error', () => {
+                if (this._popts.logging) {
+                    console.log(`[WS/${this.id}]: on('error') called`);
+                }
                 this.doClose(true);
             });
         }
         this._connectionTimer = setInterval(() => {
+            if (this._popts.logging) {
+                console.log(`[WS/${this.id}]: connection timeout timer fired`);
+            }
             this.doClose(true);
         }, opts.connectionTimeout);
     }
@@ -61,11 +88,17 @@ class DefaultWebSocketConnection implements WebSocketConnection {
     }
 
     close() {
+        if (this._popts.logging) {
+            console.log(`[WS/${this.id}]: close called`);
+        }
         this.doClose(false);
     }
 
     private doClose(notify: boolean) {
         if (this._state !== 'closed') {
+            if (this._popts.logging) {
+                console.log(`[WS/${this.id}]: closed`);
+            }
             this._state = 'closed';
             clearTimeout(this._connectionTimer);
             this._ws.onclose = empty;
@@ -85,17 +118,12 @@ class DefaultWebSocketConnection implements WebSocketConnection {
     }
 }
 
-export type DefaultWebSocketProviderOpts = {
-    connectionTimeout: number;
-    logging?: boolean;
-};
-
 export class DefaultWebSocketProvider implements WebSocketProvider<{ url: string, protocol?: string }> {
     readonly opts: DefaultWebSocketProviderOpts;
     constructor(opts: DefaultWebSocketProviderOpts) {
         this.opts = opts;
     }
     create(connectionParams: { url: string, protocol?: string }, opts: WebSocketConnectionOpts): WebSocketConnection {
-        return new DefaultWebSocketConnection(new WebSocket(connectionParams.url, connectionParams.protocol), opts);
+        return new DefaultWebSocketConnection(new WebSocket(connectionParams.url, connectionParams.protocol), opts, this.opts);
     }
 }
