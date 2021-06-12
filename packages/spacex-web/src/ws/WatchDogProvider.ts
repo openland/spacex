@@ -27,7 +27,7 @@ class WatchDogConnection implements WebSocketConnection {
 
             // Start watchdog
             this.watchDog = new WatchDogTimer(this._opts.timeout, () => {
-                this._inner.close();
+                this.doClose(true);
             });
             this.watchDog.reset();
 
@@ -38,20 +38,7 @@ class WatchDogConnection implements WebSocketConnection {
         };
 
         this._inner.onclose = () => {
-            if (this._stopped) {
-                throw Error('Already stopped');
-            }
-            this._stopped = true;
-
-            // Kill watchdog
-            if (this._started) {
-                this.watchDog!.kill();
-            }
-
-            // Invoke handler
-            if (this.onclose) {
-                this.onclose();
-            }
+            this.doClose(true);
         };
 
         this._inner.onmessage = (msg) => {
@@ -82,14 +69,30 @@ class WatchDogConnection implements WebSocketConnection {
     }
 
     close(): void {
+        this.doClose(false);
+    }
+
+    private doClose(notify: boolean) {
         // Ignore for stopped
         if (this._stopped) {
             return;
         }
         this._stopped = true;
 
+        // Kill watchdog
+        if (this._started) {
+            this.watchDog!.kill();
+        }
+
         // Stop inner
         this._inner.close();
+
+        // Notify
+        if (notify) {
+            if (this.onclose) {
+                this.onclose();
+            }
+        }
     }
 }
 
