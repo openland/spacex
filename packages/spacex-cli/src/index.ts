@@ -2,6 +2,8 @@
 const version = require(__dirname + '/../package.json').version as string;
 import program from 'commander';
 import { compile } from './compiler/compile';
+import { fetchIntrospection } from './fetch/fetchIntrospection';
+import * as fs from 'fs';
 
 // Description
 program
@@ -37,5 +39,17 @@ program.command('compile')
         });
     });
 
+program.command('fetch')
+    .description('Fetch graphql schema')
+    .option('-e, --endpoint <endpoint>', 'GraphQL endpoint')
+    .option('-j, --json', 'Fetch GraphQL Schema in JSON instead. Default: false.', false)
+    .option('-o, --output <output>', 'GraphQL output file')
+    .action(async (options) => {
+        const endpoint = options.endpoint as string;
+        const output = options.output as string;
+        const jsonFormat = options.json as boolean;
+        const fetched = await fetchIntrospection(endpoint, jsonFormat ? 'json' : 'graphql');
+        fs.writeFileSync(output, fetched, 'utf8');
+    });
 // Start
 program.parse(process.argv);

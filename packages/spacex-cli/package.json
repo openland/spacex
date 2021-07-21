@@ -18,6 +18,7 @@
         "graphql": "15.5.0",
         "ora": "5.4.0",
         "prompts": "2.4.1",
-        "relay-compiler": "10.1.0"
+        "relay-compiler": "10.1.0",
+        "node-fetch": "2.6.1"
     }
 }

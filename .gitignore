@@ -3,3 +3,4 @@ output
 packages/spacex-cli/lib
 packages/spacex-web/lib
 packages/spacex/lib
+*.tsbuildinfo
