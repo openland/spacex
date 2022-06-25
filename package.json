@@ -37,7 +37,7 @@
     "isomorphic-ws": "4.0.1",
     "jest": "25.5.0",
     "lerna": "4.0.0",
-    "node-fetch": "2.6.1",
+    "node-fetch": "2.6.7",
     "ora": "5.4.0",
     "prompts": "2.4.1",
     "react": "16.12.0",
